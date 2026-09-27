@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Oportunidad</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${oportunidad.nuevo} ? 'Nueva oportunidad' : 'Editar oportunidad'">Oportunidad</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/oportunidades/guardar}" th:object="${oportunidad}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-8"><div th:replace="~{fragments/ui :: campo('titulo', 'Título', 'text')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('tipoServicio', 'Servicio de interés', ${tiposServicio}, 'Seleccione...')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('cliente', 'Cliente', ${clientes}, 'razonSocial', 'Seleccione...')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('campana', 'Campaña de origen', ${campanas}, 'nombre', '(Ninguna)')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: selectEnum('etapa', 'Etapa', ${etapas}, null)}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('montoEstimado', 'Monto estimado (S/)', 'number')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('probabilidad', 'Probabilidad (%)', 'number')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('fechaCierreEstimada', 'Cierre estimado', 'date')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('responsable', 'Responsable', ${usuarios}, 'nombreCompleto', '(Sin asignar)')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('descripcion', 'Descripción / necesidades del cliente')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/oportunidades}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

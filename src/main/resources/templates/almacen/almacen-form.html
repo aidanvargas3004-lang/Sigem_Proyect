@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Almacén</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${almacen.nuevo} ? 'Nuevo almacén' : 'Editar almacén'">Almacén</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/almacenes/guardar}" th:object="${almacen}" method="post">
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('nombre', 'Nombre', 'text')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('responsable', 'Responsable', ${empleados}, 'nombreCompleto', '(Sin responsable)')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: campo('ubicacion', 'Ubicación', 'text')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: check('activo', 'Almacén activo')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/almacenes}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

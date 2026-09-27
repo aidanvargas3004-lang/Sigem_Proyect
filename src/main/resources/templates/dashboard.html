@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Panel principal</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1>Panel principal</h1>
+            <p class="subtitulo">Hola, <span th:text="${usuarioActual.nombreCompleto}">usuario</span>. Estado de la flota y operaciones al
+                <span th:text="${@ui.fecha(#temporals.createNow())}">hoy</span>.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a sec:authorize="hasAuthority('ALQUILERES_GESTIONAR')" class="btn btn-primary" th:href="@{/alquileres/nuevo}"><i class="bi bi-plus-lg me-1"></i>Alquiler</a>
+            <a sec:authorize="hasAuthority('SERVICIOS_GESTIONAR')" class="btn btn-outline-primary" th:href="@{/servicios/nuevo}"><i class="bi bi-plus-lg me-1"></i>Servicio</a>
+            <a sec:authorize="hasAuthority('ASIGNACIONES_VER')" class="btn btn-outline-secondary" th:href="@{/asignaciones/disponibilidad}"><i class="bi bi-search me-1"></i>Disponibilidad</a>
+        </div>
+    </div>
+
+    <!-- Indicadores -->
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('FLOTA_VER')">
+            <a class="card kpi text-decoration-none" th:href="@{/unidades}">
+                <div class="icono bg-warning-subtle text-warning-emphasis"><i class="bi bi-truck-front"></i></div>
+                <div><div class="valor" th:text="${r.totalUnidades}">0</div>
+                    <div class="etiqueta">Unidades · <span th:text="${r.disponibilidadPorcentaje} + '%'">0%</span> operativas</div></div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('ALQUILERES_VER') or hasAuthority('SERVICIOS_VER')">
+            <div class="card kpi">
+                <div class="icono bg-primary-subtle text-primary"><i class="bi bi-play-circle"></i></div>
+                <div><div class="valor" th:text="${r.operacionesEnCurso}">0</div>
+                    <div class="etiqueta">Operaciones en curso · <span th:text="${r.operacionesProgramadas}">0</span> programadas</div></div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('MANTENIMIENTO_VER')">
+            <a class="card kpi text-decoration-none" th:href="@{/mantenimiento}">
+                <div class="icono bg-orange-subtle text-danger"><i class="bi bi-tools"></i></div>
+                <div><div class="valor" th:text="${r.ordenesAbiertas}">0</div>
+                    <div class="etiqueta">Órdenes de mantenimiento abiertas · <span th:text="${#lists.size(r.mantenimientoProximo)}">0</span> alertas</div></div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('VENTAS_VER')">
+            <a class="card kpi text-decoration-none" th:href="@{/ventas}">
+                <div class="icono bg-success-subtle text-success"><i class="bi bi-cash-coin"></i></div>
+                <div><div class="valor" th:text="${@ui.soles(r.ventasMes)}">S/ 0</div>
+                    <div class="etiqueta">Facturado este mes · <span th:text="${@ui.soles(r.montoPorFacturar)}">S/ 0</span> por facturar
+                        (<span th:text="${r.operacionesPorFacturar}">0</span>)</div></div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-5" sec:authorize="hasAuthority('FLOTA_VER')">
+            <div class="card h-100">
+                <div class="card-header">Estado de la flota</div>
+                <div class="card-body">
+                    <canvas id="graficoFlota" height="220"></canvas>
+                    <div class="d-flex flex-wrap gap-2 mt-3 justify-content-center">
+                        <a th:each="e : ${r.unidadesPorEstado}" th:href="@{/unidades(estado=${e.key})}" class="text-decoration-none">
+                            <span class="badge" th:classappend="|text-bg-${@ui.color(e.key)}|" th:text="|${e.key.label}: ${e.value}|"></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7" sec:authorize="hasAuthority('VENTAS_VER')">
+            <div class="card h-100">
+                <div class="card-header">Facturación de los últimos 6 meses (S/ con IGV)</div>
+                <div class="card-body"><canvas id="graficoVentas" height="200"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-7" sec:authorize="hasAuthority('ASIGNACIONES_VER')">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Próximas asignaciones y trabajos en curso</span>
+                    <a class="small" th:href="@{/asignaciones}">Ver todas</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Referencia</th><th>Unidad</th><th>Personal</th><th>Inicio</th><th>Fin</th><th>Estado</th></tr></thead>
+                        <tbody>
+                        <tr th:each="a : ${r.proximasAsignaciones}">
+                            <td><a th:href="@{/asignaciones/{id}(id=${a.id})}" th:text="${a.referencia}">ALQ</a></td>
+                            <td><a th:href="@{/unidades/{id}(id=${a.unidad.id})}" th:text="${a.unidad.codigo}">U</a></td>
+                            <td th:text="${a.empleado != null ? a.empleado.nombreCompleto : '-'}">-</td>
+                            <td th:text="${@ui.fecha(a.fechaInicio)}"></td>
+                            <td th:text="${@ui.fecha(a.fechaFin)}"></td>
+                            <td><span th:replace="~{fragments/ui :: badge(${a.estado})}"></span></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(r.proximasAsignaciones)}"><td colspan="6" class="text-center text-muted py-4">Sin asignaciones activas</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="card mb-3" sec:authorize="hasAuthority('MANTENIMIENTO_VER')">
+                <div class="card-header"><i class="bi bi-wrench-adjustable text-danger me-1"></i>Mantenimiento preventivo próximo</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center" th:each="u : ${r.mantenimientoProximo}">
+                        <span><a th:href="@{/unidades/{id}(id=${u.id})}" th:text="${u.codigo}">U</a>
+                            <small class="text-muted" th:text="|${u.marca} ${u.modelo}|"></small><br>
+                            <small th:text="|Faltan ${@ui.num(u.restanteMantenimiento)} ${u.tipo.medida} (${u.porcentajeUso}% del intervalo)|"></small></span>
+                        <a sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')" class="btn btn-sm btn-outline-danger"
+                           th:href="@{/mantenimiento/nuevo(unidadId=${u.id})}">Programar</a>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(r.mantenimientoProximo)}">Ninguna unidad requiere preventivo</li>
+                </ul>
+            </div>
+            <div class="card mb-3" sec:authorize="hasAuthority('ALMACENES_VER')">
+                <div class="card-header"><i class="bi bi-box-seam text-warning me-1"></i>Repuestos con stock bajo</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="i : ${r.stockBajo}">
+                        <span><span th:text="${i.repuesto.nombre}">R</span> <small class="text-muted" th:text="${i.almacen.nombre}"></small></span>
+                        <span class="badge text-bg-warning" th:text="|${@ui.num(i.cantidad)} / mín. ${@ui.num(i.repuesto.stockMinimo)}|"></span>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(r.stockBajo)}">Stock suficiente en todos los almacenes</li>
+                </ul>
+            </div>
+            <div class="card" sec:authorize="hasAuthority('CONTRATOS_VER')">
+                <div class="card-header"><i class="bi bi-calendar-x text-primary me-1"></i>Contratos por vencer (30 días)</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="c : ${r.contratosPorVencer}">
+                        <span><a th:href="@{/contratos/{id}(id=${c.id})}" th:text="${c.codigo}">C</a>
+                            <small class="text-muted" th:text="${c.cliente.razonSocial}"></small></span>
+                        <span class="badge text-bg-danger" th:text="|${c.diasRestantes} días|"></span>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(r.contratosPorVencer)}">No hay contratos por vencer</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block layout:fragment="scripts">
+    <script th:src="@{/webjars/chart.js/4.4.1/dist/chart.umd.js}"></script>
+    <script th:inline="javascript">
+        const colores = {DISPONIBLE: '#198754', ASIGNADA: '#ffc107', EN_SERVICIO: '#0d6efd', EN_MANTENIMIENTO: '#ea580c', FUERA_SERVICIO: '#dc3545'};
+        const estados = /*[[${r.unidadesPorEstado.keySet()}]]*/ [];
+        const etiquetas = /*[[${r.unidadesPorEstado.keySet().![label]}]]*/ [];
+        const cantidades = /*[[${r.unidadesPorEstado.values()}]]*/ [];
+        const flota = document.getElementById('graficoFlota');
+        if (flota) {
+            new Chart(flota, {
+                type: 'doughnut',
+                data: {labels: etiquetas, datasets: [{data: cantidades, backgroundColor: estados.map(e => colores[e]), borderWidth: 2}]},
+                options: {plugins: {legend: {position: 'right'}}, cutout: '62%'}
+            });
+        }
+        const ventas = document.getElementById('graficoVentas');
+        if (ventas) {
+            new Chart(ventas, {
+                type: 'bar',
+                data: {
+                    labels: /*[[${r.mesesLabels}]]*/ [],
+                    datasets: [{label: 'Facturado (S/)', data: /*[[${r.ventasPorMes}]]*/ [], backgroundColor: '#f59e0b', borderRadius: 6}]
+                },
+                options: {plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}
+            });
+        }
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title layout:title-pattern="$CONTENT_TITLE · SIGEM">SIGEM</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/sigem.css}">
+    <th:block layout:fragment="head"></th:block>
+</head>
+<body>
+<div class="app">
+    <!-- ================= Menú lateral ================= -->
+    <aside class="sidebar" id="sidebar">
+        <a class="brand" th:href="@{/}">
+            <img th:src="@{/img/logo.svg}" alt="">
+            <span><strong>SIGEM</strong><small>Gestión de Flotas y Maquinaria<br>TRANSMAQ SUR S.A.C.</small></span>
+        </a>
+        <nav class="nav flex-column pb-4">
+            <a class="nav-link" th:href="@{/}" th:classappend="${menuActivo == '/'} ? 'active'"><i class="bi bi-speedometer2"></i>Panel principal</a>
+            <a class="nav-link" th:if="${usuarioActual != null and usuarioActual.empleadoId != null}" th:href="@{/mis-tareas}"
+               th:classappend="${uriActual == '/mis-tareas'} ? 'active'"><i class="bi bi-person-workspace"></i>Mis tareas</a>
+            <th:block th:each="seccion : ${menu}">
+                <div class="nav-seccion" th:text="${seccion.titulo}">Sección</div>
+                <a th:each="item : ${seccion.items}" class="nav-link" th:href="@{${item.url}}"
+                   th:classappend="${menuActivo == item.url} ? 'active'">
+                    <i class="bi" th:classappend="${item.icono}"></i><span th:text="${item.etiqueta}">Item</span>
+                </a>
+            </th:block>
+        </nav>
+    </aside>
+
+    <div class="main">
+        <!-- ================= Barra superior ================= -->
+        <header class="topbar">
+            <button class="btn btn-light d-lg-none" type="button" data-toggle-sidebar aria-label="Menú"><i class="bi bi-list"></i></button>
+            <div class="fw-semibold text-secondary d-none d-md-block">Sistema Integral de Gestión de Flotas y Maquinaria</div>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-label="Notificaciones">
+                        <i class="bi bi-bell"></i>
+                        <span th:if="${notificacionesNoLeidas > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
+                              th:text="${notificacionesNoLeidas > 99 ? '99+' : notificacionesNoLeidas}">3</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                        <li th:if="${#lists.isEmpty(notificacionesRecientes)}"><span class="dropdown-item-text text-muted">No tiene notificaciones pendientes</span></li>
+                        <li th:each="n : ${notificacionesRecientes}">
+                            <a class="dropdown-item notif-item d-flex gap-2" th:href="@{/notificaciones/{id}/abrir(id=${n.id})}">
+                                <i class="bi mt-1" th:classappend="|${@ui.icono(n.tipo)} text-${@ui.color(n.tipo)}|"></i>
+                                <span><strong class="d-block" th:text="${n.titulo}">Título</strong>
+                                    <small th:text="${n.mensaje}">Mensaje</small></span>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-center small" th:href="@{/notificaciones}">Ver todas</a></li>
+                    </ul>
+                </div>
+                <div class="dropdown" th:if="${usuarioActual != null}">
+                    <button class="btn btn-light d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                        <span class="avatar" th:text="${usuarioActual.iniciales}">AD</span>
+                        <span class="text-start d-none d-sm-block lh-1">
+                            <span class="d-block small fw-semibold" th:text="${usuarioActual.nombreCompleto}">Usuario</span>
+                            <span class="d-block text-muted" style="font-size:.72rem" th:text="${usuarioActual.rol}">ROL</span>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item" th:href="@{/perfil}"><i class="bi bi-person me-2"></i>Mi perfil</a></li>
+                        <li><a class="dropdown-item" th:href="@{/notificaciones}"><i class="bi bi-bell me-2"></i>Notificaciones</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= Contenido ================= -->
+        <main class="content">
+            <div th:if="${exito}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i><span th:text="${exito}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            <div layout:fragment="content"></div>
+        </main>
+        <footer class="footer">
+            SIGEM · TRANSMAQ SUR S.A.C. · Arequipa, Perú · <span th:text="${#temporals.year(#temporals.createNow())}">2026</span>
+        </footer>
+    </div>
+</div>
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/sigem.js}"></script>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

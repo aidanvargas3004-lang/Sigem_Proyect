@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${venta.numeroComprobante}">Venta</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="|${venta.tipoComprobante.label} ${venta.numeroComprobante}|"></span> <span th:replace="~{fragments/ui :: badge(${venta.estado})}"></span></h1>
+            <p class="subtitulo"><a th:href="@{/clientes/{id}(id=${venta.cliente.id})}" th:text="${venta.cliente.razonSocial}"></a>
+                · <span th:text="|${venta.cliente.tipoDocumento} ${venta.cliente.numeroDocumento}|"></span>
+                · Emisión <span th:text="${@ui.fecha(venta.fechaEmision)}"></span></p></div>
+        <div class="d-flex flex-wrap gap-2">
+            <a th:unless="${venta.editable}" class="btn btn-outline-dark" target="_blank" th:href="@{/ventas/{id}/imprimir(id=${venta.id})}"><i class="bi bi-printer me-1"></i>Imprimir</a>
+            <th:block sec:authorize="hasAuthority('VENTAS_GESTIONAR')">
+                <a th:if="${venta.editable}" class="btn btn-outline-secondary" th:href="@{/ventas/{id}/editar(id=${venta.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+                <form th:if="${venta.editable}" th:action="@{/ventas/{id}/emitir(id=${venta.id})}" method="post" data-confirmar="¿Emitir el comprobante? Se asignará el número correlativo y ya no podrá modificarse.">
+                    <button class="btn btn-primary"><i class="bi bi-send-check me-1"></i>Emitir</button></form>
+                <form th:unless="${venta.estado.name() == 'ANULADA'}" th:action="@{/ventas/{id}/anular(id=${venta.id})}" method="post"
+                      th:attr="data-confirmar=${venta.editable} ? '¿Eliminar este borrador?' : '¿Anular el comprobante? Se devolverá el stock y las operaciones quedarán pendientes de facturar.'">
+                    <button class="btn btn-outline-danger" th:text="${venta.editable} ? 'Eliminar borrador' : 'Anular'"></button></form>
+            </th:block>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card mb-3">
+                <div class="table-responsive"><table class="table">
+                    <thead><tr><th>Tipo</th><th>Descripción</th><th class="text-end">Cantidad</th><th class="text-end">P. unit.</th><th class="text-end">Importe</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="d : ${venta.detalles}">
+                        <td><span class="badge text-bg-light" th:text="${d.tipoLinea.label}"></span></td>
+                        <td><span th:text="${d.descripcion}"></span>
+                            <a class="small d-block" th:if="${d.alquiler != null}" th:href="@{/alquileres/{id}(id=${d.alquiler.id})}" th:text="'Ver ' + ${d.alquiler.codigo}"></a>
+                            <a class="small d-block" th:if="${d.servicio != null}" th:href="@{/servicios/{id}(id=${d.servicio.id})}" th:text="'Ver ' + ${d.servicio.codigo}"></a>
+                            <small class="d-block text-muted" th:if="${d.almacen != null}" th:text="'Almacén: ' + ${d.almacen.nombre}"></small></td>
+                        <td class="text-end" th:text="|${@ui.num(d.cantidad)} ${d.unidadMedida}|"></td>
+                        <td class="text-end" th:text="${@ui.soles(d.precioUnitario)}"></td><td class="text-end" th:text="${@ui.soles(d.subtotal)}"></td>
+                        <td class="text-end"><form th:if="${venta.editable}" sec:authorize="hasAuthority('VENTAS_GESTIONAR')"
+                                th:action="@{/ventas/{id}/detalles/{d}/eliminar(id=${venta.id},d=${d.id})}" method="post">
+                            <button class="btn btn-sm btn-link text-danger" title="Quitar"><i class="bi bi-trash"></i></button></form></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(venta.detalles)}"><td colspan="6" class="text-center text-muted py-4">Agregue las líneas a facturar</td></tr>
+                    </tbody>
+                    <tfoot>
+                    <tr><td colspan="4" class="text-end">Op. gravada</td><td class="text-end" th:text="${@ui.soles(venta.subtotal)}"></td><td></td></tr>
+                    <tr><td colspan="4" class="text-end">IGV (18%)</td><td class="text-end" th:text="${@ui.soles(venta.igv)}"></td><td></td></tr>
+                    <tr class="fw-bold fs-5"><td colspan="4" class="text-end">Total</td><td class="text-end" th:text="${@ui.soles(venta.total)}"></td><td></td></tr>
+                    </tfoot>
+                </table></div>
+            </div>
+            <div class="card" th:unless="${venta.editable}"><div class="card-body small">
+                <span class="text-muted">Vencimiento:</span> <span th:text="${@ui.fecha(venta.fechaVencimiento)}"></span> ·
+                <span class="text-muted">Pago:</span> <span th:text="${venta.fechaPago != null ? @ui.fecha(venta.fechaPago) + ' (' + venta.metodoPago + ')' : 'Pendiente'}"></span> ·
+                <span class="text-muted">Registrado por:</span> <span th:text="${venta.creadoPor}"></span>
+                <p class="mb-0 mt-2" th:if="${venta.observaciones}" th:text="${venta.observaciones}"></p>
+            </div></div>
+        </div>
+        <div class="col-xl-4" sec:authorize="hasAuthority('VENTAS_GESTIONAR')">
+            <th:block th:if="${venta.editable}">
+                <div class="card mb-3">
+                    <div class="card-header">Alquileres / servicios por facturar</div>
+                    <div class="card-body">
+                        <form th:action="@{/ventas/{id}/operaciones(id=${venta.id})}" method="post" th:if="${!#lists.isEmpty(pendientes)}">
+                            <select class="form-select mb-2" name="referencia" required>
+                                <option th:each="o : ${pendientes}" th:value="|${o.codigo.startsWith('ALQ') ? 'A' : 'S'}-${o.id}|"
+                                        th:text="|${o.codigo} · ${@ui.num(o.cantidadFacturable)} ${o.modalidad.unidad} · ${@ui.soles(o.montoTotal)}|"></option>
+                            </select>
+                            <button class="btn btn-outline-primary w-100">Agregar operación</button>
+                        </form>
+                        <p class="small text-muted mb-0" th:if="${#lists.isEmpty(pendientes)}">El cliente no tiene operaciones finalizadas pendientes de facturar.</p>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-header">Venta de repuestos</div>
+                    <div class="card-body">
+                        <form th:action="@{/ventas/{id}/repuestos(id=${venta.id})}" method="post">
+                            <select class="form-select mb-2" name="inventario" required>
+                                <option value="">Repuesto (almacén · stock)...</option>
+                                <option th:each="i : ${stock}" th:value="|${i.repuesto.id}-${i.almacen.id}|"
+                                        th:text="|${i.repuesto.nombre} (${i.almacen.nombre} · ${@ui.num(i.cantidad)})|"></option>
+                            </select>
+                            <div class="row g-2 mb-2">
+                                <div class="col"><input class="form-control" type="number" step="any" min="0.01" name="cantidad" placeholder="Cantidad" required></div>
+                                <div class="col"><input class="form-control" type="number" step="any" min="0" name="precio" placeholder="Precio (opcional)"></div>
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Agregar repuesto</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Otro concepto</div>
+                    <div class="card-body">
+                        <form th:action="@{/ventas/{id}/conceptos(id=${venta.id})}" method="post">
+                            <input class="form-control mb-2" name="descripcion" placeholder="Descripción (ej. Movilización de equipo)" required>
+                            <div class="row g-2 mb-2">
+                                <div class="col"><input class="form-control" type="number" step="any" min="0.01" name="cantidad" value="1" required></div>
+                                <div class="col"><input class="form-control" type="number" step="any" min="0" name="precio" placeholder="Precio unit." required></div>
+                            </div>
+                            <button class="btn btn-outline-primary w-100">Agregar concepto</button>
+                        </form>
+                    </div>
+                </div>
+            </th:block>
+            <div class="card" th:if="${venta.estado.name() == 'EMITIDA'}">
+                <div class="card-header">Registrar pago</div>
+                <div class="card-body">
+                    <form th:action="@{/ventas/{id}/pago(id=${venta.id})}" method="post">
+                        <select class="form-select mb-2" name="metodoPago" required>
+                            <option>Transferencia bancaria</option><option>Depósito en cuenta</option><option>Efectivo</option><option>Cheque</option><option>Detracción</option>
+                        </select>
+                        <input class="form-control mb-2" type="date" name="fechaPago" th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}">
+                        <button class="btn btn-success w-100"><i class="bi bi-cash me-1"></i>Registrar pago</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

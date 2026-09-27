@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Inventario</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Inventario de repuestos</h1><p class="subtitulo">Stock valorizado: <strong th:text="${@ui.soles(valorizado)}"></strong></p></div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" th:href="@{/inventario/movimientos}"><i class="bi bi-list-ul me-1"></i>Kardex</a>
+            <a sec:authorize="hasAuthority('COMPRAS_GESTIONAR')" class="btn btn-primary" th:href="@{/compras/nuevo}"><i class="bi bi-cart-plus me-1"></i>Orden de compra</a>
+        </div>
+    </div>
+    <div class="alert alert-warning" th:if="${!#lists.isEmpty(bajoMinimo)}">
+        <i class="bi bi-exclamation-triangle me-1"></i><strong th:text="${#lists.size(bajoMinimo)}"></strong> repuesto(s) con stock igual o menor al mínimo:
+        <span th:each="i, st : ${bajoMinimo}" th:text="|${i.repuesto.nombre} (${i.almacen.nombre})${st.last ? '' : ', '}|"></span>
+    </div>
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-body border-bottom">
+                    <form class="row g-2" method="get" th:action="@{/inventario}">
+                        <div class="col-auto"><div th:replace="~{fragments/ui :: buscador('#tablaStock')}"></div></div>
+                        <div class="col-auto"><select name="almacenId" class="form-select" onchange="this.form.submit()">
+                            <option value="">Todos los almacenes</option>
+                            <option th:each="a : ${almacenes}" th:value="${a.id}" th:text="${a.nombre}" th:selected="${a.id == almacenId}"></option>
+                        </select></div>
+                    </form>
+                </div>
+                <div class="table-responsive"><table class="table table-hover" id="tablaStock">
+                    <thead><tr><th>Almacén</th><th>Repuesto</th><th class="text-end">Stock</th><th class="text-end">Mínimo</th><th class="text-end">Valor</th><th></th></tr></thead>
+                    <tbody><tr th:each="i : ${stock}">
+                        <td th:text="${i.almacen.nombre}"></td>
+                        <td><a th:href="@{/repuestos/{id}(id=${i.repuesto.id})}" th:text="${i.repuesto.descripcionCompleta}"></a></td>
+                        <td class="text-end" th:text="|${@ui.num(i.cantidad)} ${i.repuesto.unidadMedida}|"></td>
+                        <td class="text-end" th:text="${@ui.num(i.repuesto.stockMinimo)}"></td>
+                        <td class="text-end" th:text="${@ui.soles(i.cantidad.multiply(i.repuesto.precioUnitario))}"></td>
+                        <td><span th:if="${i.bajoMinimo}" class="badge text-bg-warning">Bajo mínimo</span></td>
+                    </tr></tbody>
+                </table></div>
+            </div>
+        </div>
+        <div class="col-xl-4" sec:authorize="hasAuthority('ALMACENES_GESTIONAR')">
+            <div class="card mb-3">
+                <div class="card-header">Ajuste por inventario físico</div>
+                <div class="card-body">
+                    <form th:action="@{/inventario/ajuste}" method="post" data-confirmar="¿Registrar el ajuste de inventario?">
+                        <select class="form-select mb-2" name="almacenId" required>
+                            <option value="">Almacén...</option><option th:each="a : ${almacenes}" th:value="${a.id}" th:text="${a.nombre}"></option></select>
+                        <select class="form-select mb-2" name="repuestoId" required>
+                            <option value="">Repuesto...</option><option th:each="r : ${repuestos}" th:value="${r.id}" th:text="${r.descripcionCompleta}"></option></select>
+                        <input class="form-control mb-2" type="number" step="any" min="0" name="cantidadReal" placeholder="Cantidad real contada" required>
+                        <input class="form-control mb-2" name="motivo" placeholder="Motivo (merma, conteo, deterioro...)" required>
+                        <button class="btn btn-outline-primary w-100">Registrar ajuste</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Transferencia entre almacenes</div>
+                <div class="card-body">
+                    <form th:action="@{/inventario/transferencia}" method="post">
+                        <select class="form-select mb-2" name="origenId" required>
+                            <option value="">Desde...</option><option th:each="a : ${almacenes}" th:value="${a.id}" th:text="${a.nombre}"></option></select>
+                        <select class="form-select mb-2" name="destinoId" required>
+                            <option value="">Hacia...</option><option th:each="a : ${almacenes}" th:value="${a.id}" th:text="${a.nombre}"></option></select>
+                        <select class="form-select mb-2" name="repuestoId" required>
+                            <option value="">Repuesto...</option><option th:each="r : ${repuestos}" th:value="${r.id}" th:text="${r.descripcionCompleta}"></option></select>
+                        <input class="form-control mb-2" type="number" step="any" min="0.01" name="cantidad" placeholder="Cantidad" required>
+                        <button class="btn btn-outline-primary w-100">Transferir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

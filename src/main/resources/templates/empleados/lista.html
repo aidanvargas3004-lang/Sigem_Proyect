@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Empleados</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Empleados</h1><p class="subtitulo">Conductores, operadores, técnicos y personal administrativo</p></div>
+        <a sec:authorize="hasAuthority('EMPLEADOS_GESTIONAR')" class="btn btn-primary" th:href="@{/empleados/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo empleado</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom">
+            <form class="row g-2" method="get" th:action="@{/empleados}">
+                <div class="col-auto"><div th:replace="~{fragments/ui :: buscador('#tablaEmpleados')}"></div></div>
+                <div class="col-auto"><select name="area" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todas las áreas</option>
+                    <option th:each="a : ${areas}" th:value="${a}" th:text="${a.label}" th:selected="${a == area}"></option>
+                </select></div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="tablaEmpleados">
+                <thead><tr><th>DNI</th><th>Apellidos y nombres</th><th>Cargo</th><th>Área</th><th>Teléfono</th><th>Licencia</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="e : ${empleados}">
+                    <td th:text="${e.dni}"></td>
+                    <td><a class="fw-semibold" th:href="@{/empleados/{id}(id=${e.id})}" th:text="|${e.apellidos}, ${e.nombres}|"></a></td>
+                    <td th:text="${e.cargo.label}"></td>
+                    <td th:text="${e.area.label}"></td>
+                    <td th:text="${e.telefono ?: '-'}"></td>
+                    <td>
+                        <span th:if="${e.licenciaVencimiento == null}" class="text-muted">-</span>
+                        <th:block th:if="${e.licenciaVencimiento != null}">
+                            <span th:text="|${e.licenciaCategoria} · ${@ui.fecha(e.licenciaVencimiento)}|"></span>
+                            <span th:if="${e.licenciaVencida}" class="badge text-bg-danger">Vencida</span>
+                            <span th:if="${!e.licenciaVencida and e.licenciaVencimiento.isBefore(limiteLicencia)}" class="badge text-bg-warning">Por vencer</span>
+                        </th:block>
+                    </td>
+                    <td><span th:replace="~{fragments/ui :: badge(${e.estado})}"></span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

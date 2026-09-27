@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Mantenimiento</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Mantenimiento</h1><p class="subtitulo">Órdenes preventivas y correctivas · Programada → En proceso → Completada</p></div>
+        <a sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')" class="btn btn-primary" th:href="@{/mantenimiento/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nueva orden</a>
+    </div>
+    <div class="card mb-3 border-warning" th:if="${!#lists.isEmpty(alertas)}">
+        <div class="card-header bg-warning-subtle"><i class="bi bi-exclamation-triangle me-1"></i>Unidades que requieren mantenimiento preventivo (≥ 90% del intervalo)</div>
+        <div class="table-responsive"><table class="table table-sm mb-0">
+            <thead><tr><th>Unidad</th><th class="text-end">Lectura</th><th class="text-end">Próximo preventivo</th><th class="text-end">Restante</th><th>Uso</th><th></th></tr></thead>
+            <tbody><tr th:each="u : ${alertas}">
+                <td><a th:href="@{/unidades/{id}(id=${u.id})}" th:text="${u.descripcion}"></a></td>
+                <td class="text-end" th:text="|${@ui.num(u.lecturaActual)} ${u.tipo.medida}|"></td>
+                <td class="text-end" th:text="|${@ui.num(u.proximoMantenimiento)} ${u.tipo.medida}|"></td>
+                <td class="text-end" th:classappend="${u.mantenimientoVencido} ? 'text-danger fw-bold'" th:text="|${@ui.num(u.restanteMantenimiento)} ${u.tipo.medida}|"></td>
+                <td><span class="badge" th:classappend="${u.mantenimientoVencido} ? 'text-bg-danger' : 'text-bg-warning'" th:text="${u.porcentajeUso} + '%'"></span></td>
+                <td class="text-end"><a sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')" class="btn btn-sm btn-outline-danger"
+                                        th:href="@{/mantenimiento/nuevo(unidadId=${u.id})}">Programar preventivo</a></td>
+            </tr></tbody>
+        </table></div>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom d-flex flex-wrap gap-2">
+            <div th:replace="~{fragments/ui :: buscador('#tablaOT')}"></div>
+            <div class="btn-group btn-group-sm">
+                <a class="btn btn-outline-secondary" th:classappend="${estado == null} ? 'active'" th:href="@{/mantenimiento}">Todas</a>
+                <a th:each="e : ${estados}" class="btn btn-outline-secondary" th:classappend="${estado == e} ? 'active'" th:href="@{/mantenimiento(estado=${e})}" th:text="${e.label}"></a>
+            </div>
+        </div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaOT">
+            <thead><tr><th>OT</th><th>Unidad</th><th>Tipo</th><th>Prioridad</th><th>Programada</th><th>Técnico</th><th class="text-end">Costo</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="o : ${ordenes}">
+                <td><a class="fw-semibold" th:href="@{/mantenimiento/{id}(id=${o.id})}" th:text="${o.codigo}"></a></td>
+                <td th:text="${o.unidad.codigo}"></td><td><span th:replace="~{fragments/ui :: badge(${o.tipo})}"></span></td>
+                <td><span th:replace="~{fragments/ui :: badge(${o.prioridad})}"></span></td>
+                <td th:text="${@ui.fecha(o.fechaProgramada)}"></td>
+                <td th:text="${o.tecnico != null ? o.tecnico.nombreCompleto : '-'}"></td>
+                <td class="text-end" th:text="${@ui.soles(o.costoTotal)}"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></td>
+            </tr></tbody>
+        </table></div>
+        <div th:if="${#lists.isEmpty(ordenes)}" th:replace="~{fragments/ui :: vacio('No hay órdenes de mantenimiento')}"></div>
+    </div>
+</div>
+</body>
+</html>

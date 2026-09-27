@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Asignaciones</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Asignación de unidades y personal</h1>
+            <p class="subtitulo">Cada unidad y cada conductor/operador solo puede tener una asignación a la vez en un mismo horario</p></div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" th:href="@{/asignaciones/disponibilidad}"><i class="bi bi-search me-1"></i>Consultar disponibilidad</a>
+            <a sec:authorize="hasAuthority('ASIGNACIONES_GESTIONAR')" class="btn btn-primary" th:href="@{/asignaciones/nuevo}"><i class="bi bi-plus-lg me-1"></i>Asignación interna</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom d-flex flex-wrap gap-2 align-items-center">
+            <div th:replace="~{fragments/ui :: buscador('#tablaAsg')}"></div>
+            <div class="btn-group btn-group-sm">
+                <a class="btn btn-outline-secondary" th:classappend="${!historial} ? 'active'" th:href="@{/asignaciones}">Activas</a>
+                <a class="btn btn-outline-secondary" th:classappend="${historial} ? 'active'" th:href="@{/asignaciones(historial=true)}">Historial completo</a>
+            </div>
+        </div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaAsg">
+            <thead><tr><th>Referencia</th><th>Origen</th><th>Unidad</th><th>Conductor / operador</th><th>Inicio</th><th>Fin</th><th>Detalle</th><th>Estado</th><th></th></tr></thead>
+            <tbody><tr th:each="a : ${asignaciones}">
+                <td><a class="fw-semibold" th:href="@{/asignaciones/{id}(id=${a.id})}" th:text="${a.referencia}"></a></td>
+                <td th:text="${a.origen.label}"></td>
+                <td><a th:href="@{/unidades/{id}(id=${a.unidad.id})}" th:text="${a.unidad.codigo}"></a> <small class="text-muted" th:text="${a.unidad.tipo.label}"></small></td>
+                <td th:text="${a.empleado != null ? a.empleado.nombreCompleto : '-'}"></td>
+                <td th:text="${@ui.fecha(a.fechaInicio)}"></td><td th:text="${@ui.fecha(a.fechaFin)}"></td>
+                <td class="small" th:text="${a.descripcion}"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${a.estado})}"></span></td>
+                <td class="text-nowrap" sec:authorize="hasAuthority('ASIGNACIONES_GESTIONAR')">
+                    <th:block th:if="${a.origen.name() == 'INTERNA'}">
+                        <form class="d-inline" th:if="${a.estado.name() == 'PROGRAMADA'}" th:action="@{/asignaciones/{id}/iniciar(id=${a.id})}" method="post">
+                            <button class="btn btn-sm btn-outline-primary" title="Iniciar"><i class="bi bi-play-fill"></i></button></form>
+                        <form class="d-inline" th:if="${a.estado.name() == 'EN_CURSO'}" th:action="@{/asignaciones/{id}/finalizar(id=${a.id})}" method="post">
+                            <button class="btn btn-sm btn-outline-success" title="Finalizar"><i class="bi bi-stop-fill"></i></button></form>
+                        <form class="d-inline" th:if="${a.estado.name() == 'PROGRAMADA'}" th:action="@{/asignaciones/{id}/cancelar(id=${a.id})}" method="post" data-confirmar="¿Cancelar la asignación?">
+                            <button class="btn btn-sm btn-outline-danger" title="Cancelar"><i class="bi bi-x-lg"></i></button></form>
+                    </th:block>
+                </td>
+            </tr></tbody>
+        </table></div>
+        <div th:if="${#lists.isEmpty(asignaciones)}" th:replace="~{fragments/ui :: vacio('No hay asignaciones')}"></div>
+    </div>
+</div>
+</body>
+</html>

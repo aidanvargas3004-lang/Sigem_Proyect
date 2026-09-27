@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Auditoría</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1>Auditoría y trazabilidad</h1>
+        <p class="subtitulo">Registro automático de quién creó, modificó o eliminó cada dato, con valores anteriores y nuevos, y de los inicios de sesión</p></div></div>
+    <div class="card mb-3"><div class="card-body">
+        <form class="row g-2 align-items-end" method="get" th:action="@{/auditoria}">
+            <div class="col-md-2"><label class="form-label small">Usuario</label><input class="form-control" name="usuario" th:value="${usuario}"></div>
+            <div class="col-md-2"><label class="form-label small">Entidad</label>
+                <select class="form-select" name="entidad"><option value="">Todas</option>
+                    <option th:each="e : ${entidades}" th:value="${e}" th:text="${e}" th:selected="${e == entidad}"></option></select></div>
+            <div class="col-md-1"><label class="form-label small">ID</label><input class="form-control" type="number" name="entidadId" th:value="${entidadId}"></div>
+            <div class="col-md-2"><label class="form-label small">Acción</label>
+                <select class="form-select" name="accion"><option value="">Todas</option>
+                    <option th:each="a : ${acciones}" th:value="${a}" th:text="${a.label}" th:selected="${a == accion}"></option></select></div>
+            <div class="col-md-2"><label class="form-label small">Desde</label><input class="form-control" type="date" name="desde" th:value="${desde}"></div>
+            <div class="col-md-2"><label class="form-label small">Hasta</label><input class="form-control" type="date" name="hasta" th:value="${hasta}"></div>
+            <div class="col-md-1"><button class="btn btn-primary w-100">Buscar</button></div>
+        </form>
+    </div></div>
+    <div class="card mb-3" th:if="${historialRegistro != null}">
+        <div class="card-header" th:text="|Historial completo de ${entidad} #${entidadId}|"></div>
+        <div class="card-body"><ul class="timeline">
+            <li th:each="h : ${historialRegistro}">
+                <div><span th:replace="~{fragments/ui :: badge(${h.accion})}"></span> <strong th:text="${h.usuario}"></strong>
+                    <small class="text-muted" th:text="${@ui.fecha(h.fecha)}"></small></div>
+                <div class="small text-break" th:text="${h.detalle}"></div>
+            </li>
+        </ul></div>
+    </div>
+    <div class="card">
+        <div class="table-responsive"><table class="table table-sm table-hover">
+            <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>ID</th><th>Detalle</th><th>IP</th></tr></thead>
+            <tbody><tr th:each="a : ${pagina.content}">
+                <td class="text-nowrap" th:text="${@ui.fecha(a.fecha)}"></td><td th:text="${a.usuario}"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${a.accion})}"></span></td>
+                <td th:text="${a.entidad}"></td>
+                <td><a th:if="${a.entidadId != null}" th:href="@{/auditoria(entidad=${a.entidad},entidadId=${a.entidadId})}" th:text="${a.entidadId}"></a></td>
+                <td class="small text-break" style="max-width: 520px" th:text="${a.detalle}"></td>
+                <td class="small" th:text="${a.ip}"></td>
+            </tr></tbody>
+        </table></div>
+        <div th:if="${pagina.empty}" th:replace="~{fragments/ui :: vacio('Sin registros para los filtros seleccionados')}"></div>
+        <div th:replace="~{fragments/ui :: paginacion(${pagina})}"></div>
+    </div>
+</div>
+</body>
+</html>

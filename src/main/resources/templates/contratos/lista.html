@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Contratos</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Contratos</h1><p class="subtitulo">Vigencia, renovaciones y operaciones asociadas</p></div>
+        <a sec:authorize="hasAuthority('CONTRATOS_GESTIONAR')" class="btn btn-primary" th:href="@{/contratos/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo contrato</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom"><div th:replace="~{fragments/ui :: buscador('#tablaCtr')}"></div></div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaCtr">
+            <thead><tr><th>Código</th><th>Cliente</th><th>Objeto</th><th>Vigencia</th><th class="text-end">Monto</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="c : ${contratos}">
+                <td><a class="fw-semibold" th:href="@{/contratos/{id}(id=${c.id})}" th:text="${c.codigo}"></a></td>
+                <td th:text="${c.cliente.razonSocial}"></td><td th:text="${c.objeto ?: '-'}"></td>
+                <td><span th:text="|${@ui.fecha(c.fechaInicio)} - ${@ui.fecha(c.fechaFin)}|"></span>
+                    <span th:if="${c.porVencer}" class="badge text-bg-danger ms-1" th:text="|Vence en ${c.diasRestantes} días|"></span></td>
+                <td class="text-end" th:text="${@ui.soles(c.montoTotal)}"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${c.estado})}"></span></td>
+            </tr></tbody>
+        </table></div>
+    </div>
+</div>
+</body>
+</html>

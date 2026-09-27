@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/main}">
+<head><title th:text="${cliente.nuevo} ? 'Nuevo cliente' : 'Editar cliente'">Cliente</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1 th:text="${cliente.nuevo} ? 'Nuevo cliente' : 'Editar ' + ${cliente.razonSocial}">Cliente</h1></div></div>
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/clientes/guardar}" th:object="${cliente}" method="post">
+                <div th:replace="~{fragments/ui :: errores}"></div>
+                <input type="hidden" th:field="*{id}">
+                <div class="row">
+                    <div class="col-md-3"><div th:replace="~{fragments/ui :: selectEnum('tipoDocumento', 'Tipo de documento', ${tiposDocumento}, null)}"></div></div>
+                    <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('numeroDocumento', 'Número de documento', 'text')}"></div></div>
+                    <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('razonSocial', 'Razón social / nombre completo', 'text')}"></div></div>
+                    <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('tipoCliente', 'Tipo de cliente', ${tiposCliente}, 'Seleccione...')}"></div></div>
+                    <div class="col-md-8"><div th:replace="~{fragments/ui :: campo('direccion', 'Dirección', 'text')}"></div></div>
+                    <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('telefono', 'Teléfono', 'text')}"></div></div>
+                    <div class="col-md-8"><div th:replace="~{fragments/ui :: campo('email', 'Correo electrónico', 'email')}"></div></div>
+                    <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('observaciones', 'Observaciones')}"></div></div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>Guardar</button>
+                    <a class="btn btn-light" th:href="${cliente.nuevo} ? @{/clientes} : @{/clientes/{id}(id=${cliente.id})}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${cotizacion.codigo}">Cotización</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="'Cotización ' + ${cotizacion.codigo}"></span> <span th:replace="~{fragments/ui :: badge(${cotizacion.estado})}"></span></h1>
+            <p class="subtitulo"><a th:href="@{/clientes/{id}(id=${cotizacion.cliente.id})}" th:text="${cotizacion.cliente.razonSocial}"></a>
+                · Emitida <span th:text="${@ui.fecha(cotizacion.fechaEmision)}"></span> · Válida hasta <span th:text="${@ui.fecha(cotizacion.fechaVencimiento)}"></span>
+                <th:block th:if="${cotizacion.solicitud != null}">· <a th:href="@{/solicitudes/{id}(id=${cotizacion.solicitud.id})}" th:text="${cotizacion.solicitud.codigo}"></a></th:block></p></div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-dark" target="_blank" th:href="@{/cotizaciones/{id}/imprimir(id=${cotizacion.id})}"><i class="bi bi-printer me-1"></i>Imprimir</a>
+            <th:block sec:authorize="hasAuthority('SOLICITUDES_GESTIONAR')">
+                <a th:if="${cotizacion.editable}" class="btn btn-outline-secondary" th:href="@{/cotizaciones/{id}/editar(id=${cotizacion.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+                <form th:if="${cotizacion.editable}" th:action="@{/cotizaciones/{id}/enviar(id=${cotizacion.id})}" method="post" data-confirmar="¿Enviar la cotización al cliente? Ya no podrá modificarse.">
+                    <button class="btn btn-primary"><i class="bi bi-send me-1"></i>Enviar</button></form>
+                <form th:if="${cotizacion.estado.name() == 'ENVIADA'}" th:action="@{/cotizaciones/{id}/aceptar(id=${cotizacion.id})}" method="post" data-confirmar="¿El cliente aceptó la cotización?">
+                    <button class="btn btn-success"><i class="bi bi-hand-thumbs-up me-1"></i>Aceptada</button></form>
+                <form th:if="${cotizacion.estado.name() == 'ENVIADA' or cotizacion.editable}" th:action="@{/cotizaciones/{id}/rechazar(id=${cotizacion.id})}" method="post" data-confirmar="¿Marcar como rechazada?">
+                    <button class="btn btn-outline-danger">Rechazada</button></form>
+            </th:block>
+            <form sec:authorize="hasAuthority('CONTRATOS_GESTIONAR')" th:if="${cotizacion.estado.name() == 'ACEPTADA' and contrato == null}"
+                  th:action="@{/contratos/desde-cotizacion/{id}(id=${cotizacion.id})}" method="post" data-confirmar="¿Generar el contrato con los datos de esta cotización?">
+                <button class="btn btn-warning"><i class="bi bi-file-earmark-check me-1"></i>Generar contrato</button></form>
+            <a th:if="${contrato != null}" class="btn btn-outline-success" th:href="@{/contratos/{id}(id=${contrato.id})}" th:text="'Ver contrato ' + ${contrato.codigo}"></a>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <div class="table-responsive"><table class="table">
+            <thead><tr><th>Descripción</th><th>Tipo de unidad</th><th>Modalidad</th><th class="text-end">Cantidad</th><th class="text-end">Precio unit.</th><th class="text-end">Subtotal</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="d : ${cotizacion.detalles}">
+                <td th:text="${d.descripcion}"></td><td th:text="${d.tipoUnidad != null ? d.tipoUnidad.label : '-'}"></td>
+                <td th:text="${d.modalidad.label}"></td>
+                <td class="text-end" th:text="|${@ui.num(d.cantidad)} ${d.modalidad.unidad}|"></td>
+                <td class="text-end" th:text="${@ui.soles(d.precioUnitario)}"></td><td class="text-end" th:text="${@ui.soles(d.subtotal)}"></td>
+                <td class="text-end"><form th:if="${cotizacion.editable}" sec:authorize="hasAuthority('SOLICITUDES_GESTIONAR')"
+                        th:action="@{/cotizaciones/{id}/detalles/{d}/eliminar(id=${cotizacion.id},d=${d.id})}" method="post">
+                    <button class="btn btn-sm btn-link text-danger" title="Quitar"><i class="bi bi-trash"></i></button></form></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(cotizacion.detalles)}"><td colspan="7" class="text-center text-muted py-4">Agregue las líneas de la cotización</td></tr>
+            </tbody>
+            <tfoot>
+            <tr><td colspan="5" class="text-end">Subtotal</td><td class="text-end" th:text="${@ui.soles(cotizacion.subtotal)}"></td><td></td></tr>
+            <tr><td colspan="5" class="text-end">IGV (18%)</td><td class="text-end" th:text="${@ui.soles(cotizacion.igv)}"></td><td></td></tr>
+            <tr class="fw-bold"><td colspan="5" class="text-end">Total</td><td class="text-end" th:text="${@ui.soles(cotizacion.total)}"></td><td></td></tr>
+            </tfoot>
+        </table></div>
+        <div class="card-body border-top" th:if="${cotizacion.editable}" sec:authorize="hasAuthority('SOLICITUDES_GESTIONAR')">
+            <form class="row g-2" th:action="@{/cotizaciones/{id}/detalles(id=${cotizacion.id})}" method="post">
+                <div class="col-md-4"><input class="form-control" name="descripcion" placeholder="Descripción (ej. Alquiler de excavadora 320 con operador)" required></div>
+                <div class="col-md-2"><select class="form-select" name="tipoUnidad"><option value="">Tipo de unidad</option>
+                    <option th:each="t : ${tiposUnidad}" th:value="${t}" th:text="${t.label}"></option></select></div>
+                <div class="col-md-2"><select class="form-select" name="modalidad" required>
+                    <option th:each="m : ${modalidades}" th:value="${m}" th:text="${m.label}"></option></select></div>
+                <div class="col-md-1"><input class="form-control" type="number" step="any" min="0.01" name="cantidad" placeholder="Cant." required></div>
+                <div class="col-md-2"><input class="form-control" type="number" step="any" min="0" name="precio" placeholder="Precio unit." required></div>
+                <div class="col-md-1"><button class="btn btn-outline-primary w-100" title="Agregar"><i class="bi bi-plus-lg"></i></button></div>
+            </form>
+        </div>
+    </div>
+    <div class="card" th:if="${cotizacion.condiciones}"><div class="card-header">Condiciones</div>
+        <div class="card-body" style="white-space: pre-line" th:text="${cotizacion.condiciones}"></div></div>
+</div>
+</body>
+</html>

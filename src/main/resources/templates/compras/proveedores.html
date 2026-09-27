@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Proveedores</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Proveedores</h1></div>
+        <a sec:authorize="hasAuthority('COMPRAS_GESTIONAR')" class="btn btn-primary" th:href="@{/proveedores/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo proveedor</a>
+    </div>
+    <div class="card"><div class="table-responsive"><table class="table table-hover">
+        <thead><tr><th>RUC</th><th>Razón social</th><th>Rubro</th><th>Contacto</th><th>Teléfono</th><th>Estado</th></tr></thead>
+        <tbody><tr th:each="p : ${proveedores}">
+            <td th:text="${p.ruc}"></td><td><a class="fw-semibold" th:href="@{/proveedores/{id}(id=${p.id})}" th:text="${p.razonSocial}"></a></td>
+            <td th:text="${p.rubro ?: '-'}"></td><td th:text="${p.contacto ?: '-'}"></td><td th:text="${p.telefono ?: '-'}"></td>
+            <td><span class="badge" th:classappend="${p.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${p.activo} ? 'Activo' : 'Inactivo'"></span></td>
+        </tr></tbody>
+    </table></div></div>
+</div>
+</body>
+</html>

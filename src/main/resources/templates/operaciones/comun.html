@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<!-- Acciones y resumen de facturación comunes a alquileres (tipo A) y servicios (tipo S).
+     El controlador indica en "puedeGestionar" si el usuario puede ejecutar las acciones. -->
+<div th:fragment="acciones(op, ruta, tipo)" class="card mb-3">
+    <div class="card-header">Ejecución y valorización</div>
+    <div class="card-body">
+        <th:block th:if="${op.estado.name() == 'PROGRAMADO'}">
+            <div th:if="${puedeGestionar}">
+                <p class="small text-muted">Registre el inicio cuando la unidad empiece a trabajar. La lectura inicial por defecto es la actual de la unidad.</p>
+                <form th:action="@{|${ruta}/${op.id}/iniciar|}" method="post" class="mb-3">
+                    <label class="form-label small" th:text="|Lectura inicial (${op.unidad.tipo.medida})|"></label>
+                    <input class="form-control mb-2" type="number" step="any" name="lectura" th:value="${op.unidad.lecturaActual}" th:min="${op.unidad.lecturaActual}">
+                    <label class="form-label small">Fecha y hora de inicio</label>
+                    <input class="form-control mb-2" type="datetime-local" name="fechaHora" th:value="${#temporals.format(ahora, 'yyyy-MM-dd''T''HH:mm')}">
+                    <button class="btn btn-primary w-100"><i class="bi bi-play-fill me-1"></i>Iniciar</button>
+                </form>
+                <form th:action="@{|${ruta}/${op.id}/anular|}" method="post" data-confirmar="¿Anular? La unidad y el personal quedarán libres.">
+                    <div class="input-group input-group-sm">
+                        <input class="form-control" name="motivo" placeholder="Motivo de anulación">
+                        <button class="btn btn-outline-danger">Anular</button>
+                    </div>
+                </form>
+            </div>
+        </th:block>
+        <th:block th:if="${op.estado.name() == 'EN_CURSO'}">
+            <div th:if="${puedeGestionar}">
+                <p class="small text-muted">Al finalizar se calcula la cantidad facturable según la modalidad
+                    (<span th:text="${op.modalidad.label}"></span>) y se libera la unidad.</p>
+                <form th:action="@{|${ruta}/${op.id}/finalizar|}" method="post" data-confirmar="¿Finalizar y valorizar la operación?">
+                    <label class="form-label small" th:text="|Lectura final (${op.unidad.tipo.medida}) · inicial ${@ui.num(op.lecturaInicial)}|"></label>
+                    <input class="form-control mb-2" type="number" step="any" name="lectura" th:min="${op.lecturaInicial}" required>
+                    <label class="form-label small">Fecha y hora de fin</label>
+                    <input class="form-control mb-2" type="datetime-local" name="fechaHora" th:value="${#temporals.format(ahora, 'yyyy-MM-dd''T''HH:mm')}">
+                    <button class="btn btn-success w-100"><i class="bi bi-stop-fill me-1"></i>Finalizar</button>
+                </form>
+            </div>
+        </th:block>
+        <dl class="datos row mb-0 small" th:if="${op.inicioReal != null}">
+            <dt class="col-6">Inicio real</dt><dd class="col-6" th:text="${@ui.fecha(op.inicioReal)}"></dd>
+            <dt class="col-6">Fin real</dt><dd class="col-6" th:text="${@ui.fecha(op.finReal)}"></dd>
+            <dt class="col-6">Lectura inicial</dt><dd class="col-6" th:text="|${@ui.num(op.lecturaInicial)} ${op.unidad.tipo.medida}|"></dd>
+            <dt class="col-6">Lectura final</dt><dd class="col-6" th:text="${op.lecturaFinal != null ? @ui.num(op.lecturaFinal) + ' ' + op.unidad.tipo.medida : '-'}"></dd>
+        </dl>
+        <th:block th:if="${op.estado.name() == 'FINALIZADO'}">
+            <hr>
+            <div class="d-flex justify-content-between"><span>Cantidad facturable</span>
+                <strong th:text="|${@ui.num(op.cantidadFacturable)} ${op.modalidad.unidad}|"></strong></div>
+            <div class="d-flex justify-content-between"><span>Tarifa</span><strong th:text="${@ui.soles(op.tarifa)}"></strong></div>
+            <div class="d-flex justify-content-between fs-5"><span>Monto (sin IGV)</span><strong th:text="${@ui.soles(op.montoTotal)}"></strong></div>
+            <div class="mt-3">
+                <span th:if="${op.facturado}" class="badge text-bg-success"><i class="bi bi-receipt me-1"></i>Facturado</span>
+                <form th:if="${!op.facturado}" sec:authorize="hasAuthority('VENTAS_GESTIONAR')"
+                      th:action="@{|/ventas/facturar/${tipo}/${op.id}|}" method="post">
+                    <button class="btn btn-warning w-100"><i class="bi bi-receipt me-1"></i>Generar comprobante</button>
+                </form>
+                <span th:if="${!op.facturado}" sec:authorize="!hasAuthority('VENTAS_GESTIONAR')" class="badge text-bg-warning">Pendiente de facturar</span>
+            </div>
+        </th:block>
+    </div>
+</div>
+
+<!-- Datos de la asignación -->
+<div th:fragment="asignacion(op)" class="card mb-3">
+    <div class="card-header">Unidad y personal asignados</div>
+    <div class="card-body">
+        <dl class="datos row mb-0">
+            <dt class="col-sm-4">Unidad</dt>
+            <dd class="col-sm-8"><a th:href="@{/unidades/{id}(id=${op.unidad.id})}" th:text="${op.unidad.descripcion}"></a>
+                <span th:replace="~{fragments/ui :: badge(${op.unidad.estado})}"></span></dd>
+            <dt class="col-sm-4">Conductor / operador</dt>
+            <dd class="col-sm-8"><a th:if="${op.empleado != null}" th:href="@{/empleados/{id}(id=${op.empleado.id})}" th:text="${op.empleado.nombreCompleto}"></a>
+                <span th:if="${op.empleado == null}">Sin operador (alquiler en seco)</span></dd>
+            <dt class="col-sm-4">Periodo programado</dt>
+            <dd class="col-sm-8" th:text="|${@ui.fecha(op.asignacion.fechaInicio)} → ${@ui.fecha(op.asignacion.fechaFin)}|"></dd>
+            <dt class="col-sm-4">Asignación</dt><dd class="col-sm-8"><span th:replace="~{fragments/ui :: badge(${op.asignacion.estado})}"></span></dd>
+            <dt class="col-sm-4">Modalidad y tarifa</dt>
+            <dd class="col-sm-8" th:text="|${op.modalidad.label} · ${@ui.soles(op.tarifa)} por ${op.modalidad.unidad}|"></dd>
+        </dl>
+    </div>
+</div>
+</body>
+</html>

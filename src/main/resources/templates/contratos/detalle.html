@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${contrato.codigo}">Contrato</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="'Contrato ' + ${contrato.codigo}"></span> <span th:replace="~{fragments/ui :: badge(${contrato.estado})}"></span>
+            <span th:if="${contrato.porVencer}" class="badge text-bg-danger fs-6" th:text="|Vence en ${contrato.diasRestantes} días|"></span></h1>
+            <p class="subtitulo"><a th:href="@{/clientes/{id}(id=${contrato.cliente.id})}" th:text="${contrato.cliente.razonSocial}"></a> · <span th:text="${contrato.objeto}"></span></p></div>
+        <div class="d-flex flex-wrap gap-2" th:if="${contrato.estado.name() == 'VIGENTE'}">
+            <a sec:authorize="hasAuthority('ALQUILERES_GESTIONAR')" class="btn btn-primary" th:href="@{/alquileres/nuevo(contratoId=${contrato.id})}"><i class="bi bi-calendar-plus me-1"></i>Alquiler</a>
+            <a sec:authorize="hasAuthority('SERVICIOS_GESTIONAR')" class="btn btn-outline-primary" th:href="@{/servicios/nuevo(contratoId=${contrato.id})}"><i class="bi bi-truck me-1"></i>Servicio</a>
+            <th:block sec:authorize="hasAuthority('CONTRATOS_GESTIONAR')">
+                <a class="btn btn-outline-secondary" th:href="@{/contratos/{id}/editar(id=${contrato.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+                <form th:action="@{/contratos/{id}/finalizar(id=${contrato.id})}" method="post" data-confirmar="¿Finalizar el contrato?">
+                    <button class="btn btn-outline-dark">Finalizar</button></form>
+                <form th:action="@{/contratos/{id}/anular(id=${contrato.id})}" method="post" data-confirmar="¿Anular el contrato?">
+                    <button class="btn btn-outline-danger">Anular</button></form>
+            </th:block>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card mb-3"><div class="card-body">
+                <dl class="datos mb-0">
+                    <dt>Vigencia</dt><dd th:text="|${@ui.fecha(contrato.fechaInicio)} al ${@ui.fecha(contrato.fechaFin)}|"></dd>
+                    <dt>Monto referencial</dt><dd class="fs-5 fw-bold" th:text="${@ui.soles(contrato.montoTotal)}"></dd>
+                    <dt>Cotización de origen</dt><dd><a th:if="${contrato.cotizacion != null}" th:href="@{/cotizaciones/{id}(id=${contrato.cotizacion.id})}" th:text="${contrato.cotizacion.codigo}"></a>
+                        <span th:if="${contrato.cotizacion == null}">-</span></dd>
+                    <dt>Renueva a</dt><dd><a th:if="${contrato.contratoAnterior != null}" th:href="@{/contratos/{id}(id=${contrato.contratoAnterior.id})}" th:text="${contrato.contratoAnterior.codigo}"></a>
+                        <span th:if="${contrato.contratoAnterior == null}">-</span></dd>
+                    <dt>Condiciones</dt><dd style="white-space: pre-line" th:text="${contrato.condiciones ?: '-'}"></dd>
+                </dl>
+            </div></div>
+            <div class="card" sec:authorize="hasAuthority('CONTRATOS_GESTIONAR')" th:if="${contrato.estado.name() == 'VIGENTE' or contrato.estado.name() == 'FINALIZADO'}">
+                <div class="card-header">Renovar contrato</div>
+                <div class="card-body">
+                    <form th:action="@{/contratos/{id}/renovar(id=${contrato.id})}" method="post" data-confirmar="¿Renovar? Se creará un nuevo contrato y este quedará como renovado.">
+                        <label class="form-label">Nueva fecha de fin</label>
+                        <input class="form-control mb-2" type="date" name="fechaFin" required th:value="${contrato.fechaFin.plusMonths(3)}">
+                        <label class="form-label">Nuevo monto (opcional)</label>
+                        <input class="form-control mb-3" type="number" step="any" min="0" name="monto" th:placeholder="${contrato.montoTotal}">
+                        <button class="btn btn-warning w-100"><i class="bi bi-arrow-repeat me-1"></i>Renovar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card mb-3"><div class="card-header">Alquileres del contrato</div>
+                <div class="table-responsive"><table class="table table-hover table-sm">
+                    <thead><tr><th>Código</th><th>Unidad</th><th>Periodo</th><th class="text-end">Monto</th><th>Estado</th></tr></thead>
+                    <tbody><tr th:each="o : ${alquileres}">
+                        <td><a th:href="@{/alquileres/{id}(id=${o.id})}" th:text="${o.codigo}"></a></td><td th:text="${o.unidad.codigo}"></td>
+                        <td th:text="|${@ui.fecha(o.asignacion.fechaInicio)} - ${@ui.fecha(o.asignacion.fechaFin)}|"></td>
+                        <td class="text-end" th:text="${o.montoTotal != null ? @ui.soles(o.montoTotal) : '-'}"></td>
+                        <td><span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></td></tr></tbody>
+                </table></div></div>
+            <div class="card"><div class="card-header">Servicios de transporte del contrato</div>
+                <div class="table-responsive"><table class="table table-hover table-sm">
+                    <thead><tr><th>Código</th><th>Unidad</th><th>Ruta</th><th class="text-end">Monto</th><th>Estado</th></tr></thead>
+                    <tbody><tr th:each="o : ${servicios}">
+                        <td><a th:href="@{/servicios/{id}(id=${o.id})}" th:text="${o.codigo}"></a></td><td th:text="${o.unidad.codigo}"></td>
+                        <td th:text="|${o.origen} → ${o.destino}|"></td>
+                        <td class="text-end" th:text="${o.montoTotal != null ? @ui.soles(o.montoTotal) : '-'}"></td>
+                        <td><span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></td></tr></tbody>
+                </table></div></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.compile.nullAnalysis.mode": "disabled",
+  "files.encoding": "utf8",
+  "files.associations": {
+    "*.html": "html"
+  },
+  "spring-boot.ls.problem.application-properties.unknown-property": "IGNORE"
+}

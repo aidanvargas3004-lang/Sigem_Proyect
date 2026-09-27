@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Servicios de transporte</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Servicios de transporte</h1><p class="subtitulo">Transporte de carga pesada: programación, ruta y valorización por km, viaje u hora</p></div>
+        <a sec:authorize="hasAuthority('SERVICIOS_GESTIONAR')" class="btn btn-primary" th:href="@{/servicios/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo servicio</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom d-flex flex-wrap gap-2">
+            <div th:replace="~{fragments/ui :: buscador('#tablaSrv')}"></div>
+            <div class="btn-group btn-group-sm">
+                <a class="btn btn-outline-secondary" th:classappend="${estado == null} ? 'active'" th:href="@{/servicios}">Todos</a>
+                <a th:each="e : ${estados}" class="btn btn-outline-secondary" th:classappend="${estado == e} ? 'active'" th:href="@{/servicios(estado=${e})}" th:text="${e.label}"></a>
+            </div>
+        </div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaSrv">
+            <thead><tr><th>Código</th><th>Cliente</th><th>Unidad</th><th>Conductor</th><th>Ruta</th><th>Periodo</th><th>Modalidad</th><th class="text-end">Monto</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="a : ${servicios}">
+                <td><a class="fw-semibold" th:href="@{/servicios/{id}(id=${a.id})}" th:text="${a.codigo}"></a></td>
+                <td th:text="${a.cliente.razonSocial}"></td><td th:text="${a.unidad.codigo}"></td>
+                <td th:text="${a.empleado != null ? a.empleado.nombreCompleto : '-'}"></td>
+                <td class="small" th:text="|${a.origen} → ${a.destino}|"></td>
+                <td class="small" th:text="|${@ui.fecha(a.asignacion.fechaInicio)} → ${@ui.fecha(a.asignacion.fechaFin)}|"></td>
+                <td th:text="${a.modalidad.label}"></td>
+                <td class="text-end" th:text="${a.montoTotal != null ? @ui.soles(a.montoTotal) : '-'}"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${a.estado})}"></span>
+                    <span th:if="${a.facturable}" class="badge text-bg-warning">Por facturar</span></td>
+            </tr></tbody>
+        </table></div>
+        <div th:if="${#lists.isEmpty(alquileres)}" th:replace="~{fragments/ui :: vacio('No hay servicios')}"></div>
+    </div>
+</div>
+</body>
+</html>

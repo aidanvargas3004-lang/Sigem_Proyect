@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${unidad.codigo}">Unidad</title>
+    <th:block layout:fragment="head"><link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}"></th:block>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="${unidad.codigo}"></span> <span th:replace="~{fragments/ui :: badge(${unidad.estado})}"></span></h1>
+            <p class="subtitulo" th:text="|${unidad.tipo.label} · ${unidad.marca} ${unidad.modelo} ${unidad.anio ?: ''} ${unidad.placa != null ? '· Placa ' + unidad.placa : ''}|"></p></div>
+        <div class="d-flex flex-wrap gap-2">
+            <a sec:authorize="hasAuthority('ALQUILERES_GESTIONAR')" th:unless="${unidad.estado.name() == 'FUERA_SERVICIO'}" class="btn btn-primary"
+               th:href="@{/alquileres/nuevo(unidadId=${unidad.id})}"><i class="bi bi-calendar-plus me-1"></i>Alquilar</a>
+            <a sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')" class="btn btn-outline-danger" th:href="@{/mantenimiento/nuevo(unidadId=${unidad.id})}">
+                <i class="bi bi-tools me-1"></i>Programar preventivo</a>
+            <a sec:authorize="hasAuthority('FLOTA_GESTIONAR')" class="btn btn-outline-secondary" th:href="@{/unidades/{id}/editar(id=${unidad.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <form sec:authorize="hasAuthority('FLOTA_GESTIONAR')" th:action="@{/unidades/{id}/fuera-servicio(id=${unidad.id})}" method="post"
+                  th:attr="data-confirmar=${unidad.estado.name() == 'FUERA_SERVICIO'} ? '¿Reactivar la unidad?' : '¿Dar de baja temporal (fuera de servicio) a la unidad?'">
+                <button class="btn" th:classappend="${unidad.estado.name() == 'FUERA_SERVICIO'} ? 'btn-outline-success' : 'btn-outline-dark'"
+                        th:text="${unidad.estado.name() == 'FUERA_SERVICIO'} ? 'Reactivar' : 'Fuera de servicio'"></button>
+            </form>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">Mantenimiento preventivo</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between"><span>Uso del intervalo</span><strong th:text="${unidad.porcentajeUso} + '%'"></strong></div>
+                    <div class="progress my-2" style="height:.8rem">
+                        <div class="progress-bar" th:classappend="${unidad.mantenimientoVencido} ? 'bg-danger' : (${unidad.requiereMantenimiento} ? 'bg-warning' : 'bg-success')"
+                             th:style="|width: ${@ui.tope(unidad.porcentajeUso)}%|"></div>
+                    </div>
+                    <dl class="datos row mb-0 small">
+                        <dt class="col-7" th:text="${unidad.tipo.nombreMedida}"></dt><dd class="col-5 text-end" th:text="|${@ui.num(unidad.lecturaActual)} ${unidad.tipo.medida}|"></dd>
+                        <dt class="col-7">Último preventivo</dt><dd class="col-5 text-end" th:text="|${@ui.num(unidad.lecturaUltimoMantenimiento)} ${unidad.tipo.medida}|"></dd>
+                        <dt class="col-7">Intervalo</dt><dd class="col-5 text-end" th:text="|${@ui.num(unidad.intervaloMantenimiento)} ${unidad.tipo.medida}|"></dd>
+                        <dt class="col-7">Próximo preventivo</dt><dd class="col-5 text-end fw-bold" th:text="|${@ui.num(unidad.proximoMantenimiento)} ${unidad.tipo.medida}|"></dd>
+                        <dt class="col-7">Restante</dt><dd class="col-5 text-end" th:classappend="${unidad.requiereMantenimiento} ? 'text-danger fw-bold'" th:text="|${@ui.num(unidad.restanteMantenimiento)} ${unidad.tipo.medida}|"></dd>
+                    </dl>
+                    <form sec:authorize="hasAuthority('FLOTA_GESTIONAR')" class="input-group input-group-sm mt-2" th:action="@{/unidades/{id}/lectura(id=${unidad.id})}" method="post">
+                        <input class="form-control" type="number" step="any" name="lectura" th:min="${unidad.lecturaActual}" placeholder="Nueva lectura" required>
+                        <button class="btn btn-outline-primary">Registrar lectura</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-header">Datos técnicos y tarifas</div>
+                <div class="card-body">
+                    <dl class="datos row mb-0 small">
+                        <dt class="col-6">N.° de serie</dt><dd class="col-6" th:text="${unidad.numeroSerie ?: '-'}"></dd>
+                        <dt class="col-6">Capacidad</dt><dd class="col-6" th:text="${unidad.capacidad ?: '-'}"></dd>
+                        <dt class="col-6">Adquisición</dt><dd class="col-6" th:text="${@ui.fecha(unidad.fechaAdquisicion)}"></dd>
+                        <dt class="col-6">SOAT vence</dt><dd class="col-6" th:text="${@ui.fecha(unidad.vencimientoSoat)}"></dd>
+                        <dt class="col-6">Revisión técnica</dt><dd class="col-6" th:text="${@ui.fecha(unidad.vencimientoRevisionTecnica)}"></dd>
+                        <dt class="col-6">Tarifa hora</dt><dd class="col-6" th:text="${unidad.tarifaHora != null ? @ui.soles(unidad.tarifaHora) : '-'}"></dd>
+                        <dt class="col-6">Tarifa día</dt><dd class="col-6" th:text="${unidad.tarifaDia != null ? @ui.soles(unidad.tarifaDia) : '-'}"></dd>
+                        <dt class="col-6">Tarifa km</dt><dd class="col-6" th:text="${unidad.tarifaKm != null ? @ui.soles(unidad.tarifaKm) : '-'}"></dd>
+                    </dl>
+                    <p class="small mt-2 mb-0" th:if="${unidad.observaciones}" th:text="${unidad.observaciones}"></p>
+                </div>
+            </div>
+            <div class="card" th:if="${ultimaPosicion != null}">
+                <div class="card-header d-flex justify-content-between"><span>Última ubicación GPS</span>
+                    <a class="small" th:href="@{/gps/recorrido(unidadId=${unidad.id})}">Recorrido</a></div>
+                <div id="mapaUnidad" class="mapa mapa-sm rounded-0 border-0"></div>
+                <div class="card-body small text-muted" th:text="|${@ui.fecha(ultimaPosicion.fechaHora)} · ${ultimaPosicion.referencia ?: ''}|"></div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header">Historial de asignaciones</div>
+                <div class="table-responsive"><table class="table table-hover table-sm">
+                    <thead><tr><th>Referencia</th><th>Origen</th><th>Personal</th><th>Inicio</th><th>Fin</th><th>Estado</th></tr></thead>
+                    <tbody><tr th:each="a : ${asignaciones}">
+                        <td><a th:href="@{/asignaciones/{id}(id=${a.id})}" th:text="${a.referencia}"></a></td>
+                        <td th:text="${a.origen.label}"></td>
+                        <td th:text="${a.empleado != null ? a.empleado.nombreCompleto : '-'}"></td>
+                        <td th:text="${@ui.fecha(a.fechaInicio)}"></td><td th:text="${@ui.fecha(a.fechaFin)}"></td>
+                        <td><span th:replace="~{fragments/ui :: badge(${a.estado})}"></span></td>
+                    </tr></tbody>
+                </table></div>
+                <div th:if="${#lists.isEmpty(asignaciones)}" th:replace="~{fragments/ui :: vacio('La unidad aún no tiene asignaciones')}"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Historial de mantenimiento</div>
+                <div class="table-responsive"><table class="table table-hover table-sm">
+                    <thead><tr><th>OT</th><th>Tipo</th><th>Programada</th><th>Técnico</th><th class="text-end">Costo</th><th>Estado</th></tr></thead>
+                    <tbody><tr th:each="o : ${ordenes}">
+                        <td><a th:href="@{/mantenimiento/{id}(id=${o.id})}" th:text="${o.codigo}"></a></td>
+                        <td><span th:replace="~{fragments/ui :: badge(${o.tipo})}"></span></td>
+                        <td th:text="${@ui.fecha(o.fechaProgramada)}"></td>
+                        <td th:text="${o.tecnico != null ? o.tecnico.nombreCompleto : '-'}"></td>
+                        <td class="text-end" th:text="${@ui.soles(o.costoTotal)}"></td>
+                        <td><span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></td>
+                    </tr></tbody>
+                </table></div>
+                <div th:if="${#lists.isEmpty(ordenes)}" th:replace="~{fragments/ui :: vacio('Sin órdenes de mantenimiento')}"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block layout:fragment="scripts">
+    <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
+    <script th:inline="javascript" th:if="${ultimaPosicion != null}">
+        const lat = /*[[${ultimaPosicion.latitud}]]*/ 0, lon = /*[[${ultimaPosicion.longitud}]]*/ 0;
+        const mapa = L.map('mapaUnidad').setView([lat, lon], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'}).addTo(mapa);
+        L.marker([lat, lon]).addTo(mapa);
+    </script>
+</th:block>
+</body>
+</html>

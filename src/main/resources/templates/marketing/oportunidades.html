@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Oportunidades</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Oportunidades comerciales</h1>
+            <p class="subtitulo">Embudo de ventas · Monto ponderado en negociación: <strong th:text="${@ui.soles(pipeline)}"></strong></p></div>
+        <a sec:authorize="hasAuthority('MARKETING_GESTIONAR')" class="btn btn-primary" th:href="@{/oportunidades/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nueva oportunidad</a>
+    </div>
+    <div class="row g-3 flex-nowrap overflow-auto pb-2 embudo">
+        <div class="col" th:each="e : ${embudo}">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <span th:replace="~{fragments/ui :: badge(${e.key})}"></span>
+                    <small class="text-muted" th:text="${#lists.size(e.value)}"></small>
+                </div>
+                <div class="card-body p-2">
+                    <div class="card mb-2 shadow-none" th:each="o : ${e.value}">
+                        <div class="card-body p-2">
+                            <div class="fw-semibold small" th:text="${o.titulo}"></div>
+                            <div class="small text-muted" th:text="${o.cliente.razonSocial}"></div>
+                            <div class="small"><span th:text="${@ui.soles(o.montoEstimado)}"></span> · <span th:text="${o.probabilidad} + '%'"></span></div>
+                            <div class="small text-muted" th:if="${o.campana != null}" th:text="'Campaña: ' + ${o.campana.nombre}"></div>
+                            <a class="small d-block" th:if="${o.solicitud != null}" th:href="@{/solicitudes/{id}(id=${o.solicitud.id})}" th:text="'Solicitud ' + ${o.solicitud.codigo}"></a>
+                            <div class="d-flex flex-wrap gap-1 mt-2" sec:authorize="hasAuthority('MARKETING_GESTIONAR')"
+                                 th:if="${o.etapa.name() != 'GANADA' and o.etapa.name() != 'PERDIDA'}">
+                                <form th:action="@{/oportunidades/{id}/etapa(id=${o.id})}" method="post" class="d-flex gap-1">
+                                    <select name="etapa" class="form-select form-select-sm" style="width:auto">
+                                        <option th:each="et : ${etapas}" th:value="${et}" th:text="${et.label}" th:selected="${et == o.etapa}"></option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary" title="Mover"><i class="bi bi-arrow-right"></i></button>
+                                </form>
+                                <a class="btn btn-sm btn-light" th:href="@{/oportunidades/{id}/editar(id=${o.id})}" title="Editar"><i class="bi bi-pencil"></i></a>
+                                <form th:if="${o.solicitud == null}" th:action="@{/oportunidades/{id}/solicitud(id=${o.id})}" method="post"
+                                      data-confirmar="¿Generar una solicitud formal a partir de esta oportunidad?">
+                                    <button class="btn btn-sm btn-outline-success" title="Generar solicitud"><i class="bi bi-inbox"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-muted small text-center py-3" th:if="${#lists.isEmpty(e.value)}">Sin oportunidades</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

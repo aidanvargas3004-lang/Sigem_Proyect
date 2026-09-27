@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Usuario</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${usuario.nuevo} ? 'Nuevo usuario' : 'Editar usuario ' + ${usuario.username}">Usuario</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-4" th:if="*{nuevo}"><div th:replace="~{fragments/ui :: campo('username', 'Nombre de usuario', 'text')}"></div></div>
+                <div class="col-md-4" th:unless="*{nuevo}"><label class="form-label">Nombre de usuario</label>
+                    <input class="form-control" th:value="*{username}" disabled><input type="hidden" th:field="*{username}"></div>
+                <div class="col-md-8"><div th:replace="~{fragments/ui :: campo('nombreCompleto', 'Nombre completo', 'text')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('email', 'Correo', 'email')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEntidad('rol', 'Rol', ${roles}, 'nombre', 'Seleccione...')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEntidad('empleado', 'Empleado vinculado', ${empleados}, 'nombreCompleto', '(Ninguno)')}"></div></div>
+                <div class="col-md-4"><label class="form-label" for="passwordNueva" th:text="*{nuevo} ? 'Contraseña' : 'Nueva contraseña (dejar vacío para no cambiar)'"></label>
+                    <input class="form-control" type="password" id="passwordNueva" name="passwordNueva" minlength="6" th:required="*{nuevo}" autocomplete="new-password"></div>
+            </div>
+            <p class="small text-muted">Vincule el usuario a un empleado para que vea "Mis tareas" (conductores, operadores y técnicos).</p>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/usuarios}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

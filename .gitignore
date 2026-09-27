@@ -1,0 +1,17 @@
+# Compilación
+target/
+*.class
+*.log
+
+# IDEs
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.factorypath
+.vscode/*.log
+
+# Sistema
+.DS_Store
+Thumbs.db

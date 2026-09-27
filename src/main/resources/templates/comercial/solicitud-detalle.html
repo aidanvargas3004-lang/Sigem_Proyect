@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${solicitud.codigo}">Solicitud</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="'Solicitud ' + ${solicitud.codigo}"></span> <span th:replace="~{fragments/ui :: badge(${solicitud.estado})}"></span></h1>
+            <p class="subtitulo"><a th:href="@{/clientes/{id}(id=${solicitud.cliente.id})}" th:text="${solicitud.cliente.razonSocial}"></a>
+                · <span th:text="${solicitud.tipoServicio.label}"></span></p></div>
+        <div class="d-flex flex-wrap gap-2" sec:authorize="hasAuthority('SOLICITUDES_GESTIONAR')"
+             th:if="${solicitud.estado.name() == 'REGISTRADA' or solicitud.estado.name() == 'COTIZADA'}">
+            <a class="btn btn-primary" th:href="@{/cotizaciones/nuevo(solicitudId=${solicitud.id})}"><i class="bi bi-file-earmark-plus me-1"></i>Cotizar</a>
+            <a class="btn btn-outline-secondary" th:href="@{/solicitudes/{id}/editar(id=${solicitud.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <form th:action="@{/solicitudes/{id}/estado(id=${solicitud.id})}" method="post" data-confirmar="¿Marcar la solicitud como rechazada?">
+                <input type="hidden" name="estado" value="RECHAZADA"><button class="btn btn-outline-danger">Rechazar</button></form>
+            <form th:action="@{/solicitudes/{id}/estado(id=${solicitud.id})}" method="post" data-confirmar="¿Anular la solicitud?">
+                <input type="hidden" name="estado" value="ANULADA"><button class="btn btn-outline-dark">Anular</button></form>
+        </div>
+        <div sec:authorize="hasAuthority('SERVICIOS_GESTIONAR')" th:if="${solicitud.tipoServicio.name() == 'TRANSPORTE' and (solicitud.estado.name() == 'APROBADA' or solicitud.estado.name() == 'ATENDIDA')}">
+            <a class="btn btn-primary" th:href="@{/servicios/nuevo(solicitudId=${solicitud.id})}"><i class="bi bi-truck me-1"></i>Programar servicio</a>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-5"><div class="card"><div class="card-body">
+            <dl class="datos row mb-0">
+                <dt class="col-5">Fecha de solicitud</dt><dd class="col-7" th:text="${@ui.fecha(solicitud.fechaSolicitud)}"></dd>
+                <dt class="col-5">Contacto</dt><dd class="col-7" th:text="${solicitud.contacto != null ? solicitud.contacto.nombres : '-'}"></dd>
+                <dt class="col-5">Unidad requerida</dt><dd class="col-7" th:text="${solicitud.tipoUnidad != null ? solicitud.cantidadUnidades + ' × ' + solicitud.tipoUnidad.label : '-'}"></dd>
+                <dt class="col-5">Periodo</dt><dd class="col-7" th:text="|${@ui.fecha(solicitud.fechaInicio)} al ${@ui.fecha(solicitud.fechaFin)}|"></dd>
+                <dt class="col-5">Obra / origen</dt><dd class="col-7" th:text="${solicitud.origen ?: '-'}"></dd>
+                <dt class="col-5">Destino</dt><dd class="col-7" th:text="${solicitud.destino ?: '-'}"></dd>
+                <dt class="col-5">Descripción</dt><dd class="col-7" th:text="${solicitud.descripcion}"></dd>
+                <dt class="col-5">Registrada por</dt><dd class="col-7" th:text="${solicitud.creadoPor}"></dd>
+            </dl>
+        </div></div></div>
+        <div class="col-lg-7"><div class="card">
+            <div class="card-header">Cotizaciones emitidas</div>
+            <div class="table-responsive"><table class="table table-hover">
+                <thead><tr><th>Código</th><th>Emisión</th><th>Vence</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+                <tbody><tr th:each="c : ${cotizaciones}">
+                    <td><a th:href="@{/cotizaciones/{id}(id=${c.id})}" th:text="${c.codigo}"></a></td>
+                    <td th:text="${@ui.fecha(c.fechaEmision)}"></td><td th:text="${@ui.fecha(c.fechaVencimiento)}"></td>
+                    <td class="text-end" th:text="${@ui.soles(c.total)}"></td><td><span th:replace="~{fragments/ui :: badge(${c.estado})}"></span></td>
+                </tr></tbody>
+            </table></div>
+            <div th:if="${#lists.isEmpty(cotizaciones)}" th:replace="~{fragments/ui :: vacio('Aún no se ha cotizado esta solicitud')}"></div>
+        </div></div>
+    </div>
+</div>
+</body>
+</html>

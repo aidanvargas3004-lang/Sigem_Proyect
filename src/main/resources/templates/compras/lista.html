@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Compras</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Órdenes de compra</h1><p class="subtitulo">Pendiente → Aprobada → Recibida (ingresa al almacén)</p></div>
+        <a sec:authorize="hasAuthority('COMPRAS_GESTIONAR')" class="btn btn-primary" th:href="@{/compras/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nueva orden</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom"><div th:replace="~{fragments/ui :: buscador('#tablaCompras')}"></div></div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaCompras">
+            <thead><tr><th>Código</th><th>Emisión</th><th>Proveedor</th><th>Almacén destino</th><th>Ítems</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="c : ${compras}">
+                <td><a class="fw-semibold" th:href="@{/compras/{id}(id=${c.id})}" th:text="${c.codigo}"></a></td>
+                <td th:text="${@ui.fecha(c.fechaEmision)}"></td><td th:text="${c.proveedor.razonSocial}"></td>
+                <td th:text="${c.almacen.nombre}"></td><td th:text="${#lists.size(c.detalles)}"></td>
+                <td class="text-end" th:text="${@ui.soles(c.total)}"></td><td><span th:replace="~{fragments/ui :: badge(${c.estado})}"></span></td>
+            </tr></tbody>
+        </table></div>
+    </div>
+</div>
+</body>
+</html>

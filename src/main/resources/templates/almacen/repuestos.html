@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Repuestos</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Catálogo de repuestos</h1><p class="subtitulo">Filtros, lubricantes, neumáticos, tren de rodaje y más</p></div>
+        <a sec:authorize="hasAuthority('ALMACENES_GESTIONAR')" class="btn btn-primary" th:href="@{/repuestos/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo repuesto</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom"><div th:replace="~{fragments/ui :: buscador('#tablaRepuestos')}"></div></div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaRepuestos">
+            <thead><tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Und.</th><th class="text-end">Costo</th><th class="text-end">Stock total</th><th class="text-end">Mínimo</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="r : ${repuestos}">
+                <td th:text="${r.codigo}"></td>
+                <td><a class="fw-semibold" th:href="@{/repuestos/{id}(id=${r.id})}" th:text="${r.nombre}"></a></td>
+                <td th:text="${r.categoria ?: '-'}"></td><td th:text="${r.unidadMedida}"></td>
+                <td class="text-end" th:text="${@ui.soles(r.precioUnitario)}"></td>
+                <td class="text-end" th:classappend="${stock[r.id].compareTo(r.stockMinimo) <= 0} ? 'text-danger fw-bold'" th:text="${@ui.num(stock[r.id])}"></td>
+                <td class="text-end" th:text="${@ui.num(r.stockMinimo)}"></td>
+                <td><span class="badge" th:classappend="${r.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${r.activo} ? 'Activo' : 'Inactivo'"></span></td>
+            </tr></tbody>
+        </table></div>
+    </div>
+</div>
+</body>
+</html>

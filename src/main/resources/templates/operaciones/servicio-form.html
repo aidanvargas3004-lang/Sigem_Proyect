@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Servicio de transporte</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1 th:text="${servicio.nuevo} ? 'Programar servicio de transporte' : 'Editar ' + ${servicio.codigo}">Servicio</h1>
+        <p class="subtitulo">El sistema valida que el vehículo y el conductor estén libres y con licencia vigente.</p></div>
+        <a class="btn btn-outline-secondary" target="_blank" th:href="@{/asignaciones/disponibilidad}"><i class="bi bi-search me-1"></i>Ver disponibilidad</a></div>
+    <form th:action="@{/servicios/guardar}" th:object="${servicio}" method="post">
+        <div th:replace="~{fragments/ui :: errores}"></div>
+        <input type="hidden" th:field="*{id}">
+        <div class="card mb-3"><div class="card-header">Cliente</div><div class="card-body row">
+            <div class="col-md-5"><div th:replace="~{fragments/ui :: selectEntidad('cliente', 'Cliente', ${clientes}, 'razonSocial', 'Seleccione...')}"></div></div>
+            <div class="col-md-4">
+                <label class="form-label" for="contrato">Contrato (opcional)</label>
+                <select class="form-select" th:field="*{contrato}" data-depende="#cliente">
+                    <option value="">(Sin contrato)</option>
+                    <option th:each="c : ${contratos}" th:value="${c.id}" th:attr="data-padre=${c.cliente.id}" th:text="|${c.codigo} (hasta ${@ui.fecha(c.fechaFin)})|"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="solicitud">Solicitud (opcional)</label>
+                <select class="form-select" th:field="*{solicitud}" data-depende="#cliente">
+                    <option value="">(Ninguna)</option>
+                    <option th:each="s : ${solicitudes}" th:value="${s.id}" th:attr="data-padre=${s.cliente.id}" th:text="${s.codigo}"></option>
+                </select>
+            </div>
+        </div></div>
+        <div class="card mb-3"><div class="card-header">Ruta y carga</div><div class="card-body row">
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('origen', 'Origen', 'text')}"></div></div>
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('destino', 'Destino', 'text')}"></div></div>
+            <div class="col-md-5"><div th:replace="~{fragments/ui :: campo('tipoCarga', 'Tipo de carga', 'text')}"></div></div>
+            <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('pesoToneladas', 'Peso (t)', 'number')}"></div></div>
+            <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('guiaRemision', 'Guía de remisión', 'text')}"></div></div>
+        </div></div>
+        <div class="card mb-3"><div class="card-header">Vehículo, conductor y horario</div><div class="card-body row">
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('asignacion.unidad', 'Vehículo', ${unidades}, 'descripcion', 'Seleccione...')}"></div></div>
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('asignacion.empleado', 'Conductor', ${conductores}, 'nombreCompleto', 'Seleccione...')}"></div></div>
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('asignacion.fechaInicio', 'Salida', 'datetime-local')}"></div></div>
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('asignacion.fechaFin', 'Llegada / retorno estimado', 'datetime-local')}"></div></div>
+        </div></div>
+        <div class="card mb-3"><div class="card-header">Cobro</div><div class="card-body row">
+            <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('modalidad', 'Modalidad de cobro', ${modalidades}, null)}"></div></div>
+            <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('tarifa', 'Tarifa (S/ sin IGV)', 'number')}"></div>
+                <div class="form-text mt-n2">Vacía = tarifa de la unidad (obligatoria para cobro por viaje).</div></div>
+            <div class="col-12 mt-3"><div th:replace="~{fragments/ui :: areaTexto('observaciones', 'Observaciones')}"></div></div>
+        </div></div>
+        <button class="btn btn-primary"><i class="bi bi-calendar-check me-1"></i>Guardar y reservar</button>
+        <a class="btn btn-light" th:href="@{/servicios}">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

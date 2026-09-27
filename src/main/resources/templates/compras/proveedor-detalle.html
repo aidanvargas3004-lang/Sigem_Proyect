@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${proveedor.razonSocial}">Proveedor</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1 th:text="${proveedor.razonSocial}">Proveedor</h1>
+            <p class="subtitulo" th:text="|RUC ${proveedor.ruc} · ${proveedor.rubro ?: ''} · ${proveedor.contacto ?: ''} ${proveedor.telefono ?: ''}|"></p></div>
+        <a sec:authorize="hasAuthority('COMPRAS_GESTIONAR')" class="btn btn-outline-secondary" th:href="@{/proveedores/{id}/editar(id=${proveedor.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+    </div>
+    <div class="card"><div class="card-header">Órdenes de compra</div>
+        <div class="table-responsive"><table class="table table-hover">
+            <thead><tr><th>Código</th><th>Emisión</th><th>Almacén</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="c : ${compras}">
+                <td><a th:href="@{/compras/{id}(id=${c.id})}" th:text="${c.codigo}"></a></td><td th:text="${@ui.fecha(c.fechaEmision)}"></td>
+                <td th:text="${c.almacen.nombre}"></td><td class="text-end" th:text="${@ui.soles(c.total)}"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${c.estado})}"></span></td></tr></tbody>
+        </table></div>
+    </div>
+</div>
+</body>
+</html>

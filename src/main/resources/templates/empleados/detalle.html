@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${empleado.nombreCompleto}">Empleado</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1 th:text="${empleado.nombreCompleto}">Empleado</h1>
+            <p class="subtitulo"><span th:text="|${empleado.cargo.label} · ${empleado.area.label} · DNI ${empleado.dni}|"></span>
+                <span th:replace="~{fragments/ui :: badge(${empleado.estado})}"></span></p></div>
+        <a sec:authorize="hasAuthority('EMPLEADOS_GESTIONAR')" class="btn btn-outline-secondary" th:href="@{/empleados/{id}/editar(id=${empleado.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-4"><div class="card"><div class="card-body">
+            <dl class="datos mb-0">
+                <dt>Teléfono</dt><dd th:text="${empleado.telefono ?: '-'}"></dd>
+                <dt>Correo</dt><dd th:text="${empleado.email ?: '-'}"></dd>
+                <dt>Dirección</dt><dd th:text="${empleado.direccion ?: '-'}"></dd>
+                <dt>Fecha de ingreso</dt><dd th:text="${@ui.fecha(empleado.fechaIngreso)}"></dd>
+                <dt>Licencia</dt><dd th:text="${empleado.licenciaNumero != null ? empleado.licenciaNumero + ' (' + empleado.licenciaCategoria + ')' : '-'}"></dd>
+                <dt>Vencimiento de licencia</dt><dd><span th:text="${@ui.fecha(empleado.licenciaVencimiento)}"></span>
+                    <span th:if="${empleado.licenciaVencida}" class="badge text-bg-danger">Vencida</span></dd>
+            </dl>
+        </div></div></div>
+        <div class="col-lg-8">
+            <div class="card mb-3" th:if="${empleado.personalDeCampo}">
+                <div class="card-header">Asignaciones</div>
+                <div class="table-responsive"><table class="table table-hover table-sm">
+                    <thead><tr><th>Referencia</th><th>Unidad</th><th>Inicio</th><th>Fin</th><th>Estado</th></tr></thead>
+                    <tbody><tr th:each="a : ${asignaciones}">
+                        <td><a th:href="@{/asignaciones/{id}(id=${a.id})}" th:text="${a.referencia}"></a></td>
+                        <td th:text="${a.unidad.descripcion}"></td>
+                        <td th:text="${@ui.fecha(a.fechaInicio)}"></td><td th:text="${@ui.fecha(a.fechaFin)}"></td>
+                        <td><span th:replace="~{fragments/ui :: badge(${a.estado})}"></span></td>
+                    </tr></tbody>
+                </table></div>
+            </div>
+            <div class="card" th:if="${!#lists.isEmpty(ordenes)}">
+                <div class="card-header">Órdenes de mantenimiento a su cargo</div>
+                <div class="table-responsive"><table class="table table-hover table-sm">
+                    <thead><tr><th>OT</th><th>Unidad</th><th>Tipo</th><th>Programada</th><th>Estado</th></tr></thead>
+                    <tbody><tr th:each="o : ${ordenes}">
+                        <td><a th:href="@{/mantenimiento/{id}(id=${o.id})}" th:text="${o.codigo}"></a></td>
+                        <td th:text="${o.unidad.codigo}"></td><td th:text="${o.tipo.label}"></td>
+                        <td th:text="${@ui.fecha(o.fechaProgramada)}"></td><td><span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></td>
+                    </tr></tbody>
+                </table></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

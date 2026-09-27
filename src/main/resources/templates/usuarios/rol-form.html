@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Rol</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${rol.nuevo} ? 'Nuevo rol' : 'Editar rol ' + ${rol.nombre}">Rol</h1>
+        <form th:if="${!rol.nuevo and rol.nombre != 'ADMINISTRADOR'}" sec:authorize="hasAuthority('USUARIOS_GESTIONAR')"
+              th:action="@{/roles/{id}/eliminar(id=${rol.id})}" method="post" data-confirmar="¿Eliminar el rol?"><button class="btn btn-outline-danger">Eliminar rol</button></form></div>
+    <form th:action="@{/roles/guardar}" th:object="${rol}" method="post">
+        <div th:replace="~{fragments/ui :: errores}"></div>
+        <input type="hidden" th:field="*{id}">
+        <div class="card mb-3"><div class="card-body row">
+            <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('nombre', 'Nombre (MAYÚSCULAS)', 'text')}"></div></div>
+            <div class="col-md-8"><div th:replace="~{fragments/ui :: campo('descripcion', 'Descripción', 'text')}"></div></div>
+            <p class="small text-muted mb-0" th:if="*{nombre == 'ADMINISTRADOR'}">El rol ADMINISTRADOR siempre conserva todos los permisos.</p>
+        </div></div>
+        <div class="card mb-3"><div class="table-responsive"><table class="table table-sm mb-0">
+            <thead><tr><th>Módulo</th><th class="text-center">Ver</th><th class="text-center">Gestionar</th></tr></thead>
+            <tbody><tr th:each="m : ${modulos}">
+                <td th:text="${m.label}"></td>
+                <td class="text-center"><input class="form-check-input" type="checkbox" th:field="*{permisos}" th:value="${m.permisoVer}"></td>
+                <td class="text-center"><input class="form-check-input" type="checkbox" th:field="*{permisos}" th:value="${m.permisoGestionar}"></td>
+            </tr></tbody>
+        </table></div></div>
+        <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+        <a class="btn btn-light" th:href="@{/roles}">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

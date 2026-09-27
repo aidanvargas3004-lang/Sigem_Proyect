@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Maquinaria y flota</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Maquinaria y flota</h1><p class="subtitulo">Estado consolidado de cada unidad: disponible, asignada, en servicio o en mantenimiento</p></div>
+        <a sec:authorize="hasAuthority('FLOTA_GESTIONAR')" class="btn btn-primary" th:href="@{/unidades/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nueva unidad</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom">
+            <form class="row g-2 align-items-center" method="get" th:action="@{/unidades}">
+                <div class="col-auto"><div th:replace="~{fragments/ui :: buscador('#tablaUnidades')}"></div></div>
+                <div class="col-auto">
+                    <select name="tipo" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos los tipos</option>
+                        <option th:each="t : ${tipos}" th:value="${t}" th:text="${t.label}" th:selected="${t == tipo}"></option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select name="estado" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos los estados</option>
+                        <option th:each="e : ${estados}" th:value="${e}" th:text="${e.label}" th:selected="${e == estado}"></option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="tablaUnidades">
+                <thead><tr><th>Código</th><th>Tipo</th><th>Marca / modelo</th><th>Placa</th><th>Capacidad</th><th class="text-end">Lectura</th><th>Mantenimiento preventivo</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="u : ${unidades}">
+                    <td><a class="fw-semibold" th:href="@{/unidades/{id}(id=${u.id})}" th:text="${u.codigo}"></a></td>
+                    <td th:text="${u.tipo.label}"></td>
+                    <td th:text="|${u.marca} ${u.modelo} ${u.anio ?: ''}|"></td>
+                    <td th:text="${u.placa ?: '-'}"></td>
+                    <td th:text="${u.capacidad ?: '-'}"></td>
+                    <td class="text-end" th:text="|${@ui.num(u.lecturaActual)} ${u.tipo.medida}|"></td>
+                    <td style="min-width:170px">
+                        <div class="progress barra-uso" role="progressbar">
+                            <div class="progress-bar" th:classappend="${u.mantenimientoVencido} ? 'bg-danger' : (${u.requiereMantenimiento} ? 'bg-warning' : 'bg-success')"
+                                 th:style="|width: ${@ui.tope(u.porcentajeUso)}%|"></div>
+                        </div>
+                        <small class="text-muted" th:text="|Próximo: ${@ui.num(u.proximoMantenimiento)} ${u.tipo.medida}|"></small>
+                    </td>
+                    <td><span th:replace="~{fragments/ui :: badge(${u.estado})}"></span></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(unidades)}" th:replace="~{fragments/ui :: vacio('No hay unidades con los filtros seleccionados')}"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
