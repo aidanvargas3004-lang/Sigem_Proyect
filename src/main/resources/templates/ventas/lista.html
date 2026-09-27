@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Ventas</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Ventas y facturación</h1><p class="subtitulo">Facturas y boletas por alquileres, servicios, repuestos y otros conceptos</p></div>
+        <a sec:authorize="hasAuthority('VENTAS_GESTIONAR')" class="btn btn-primary" th:href="@{/ventas/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo comprobante</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom"><div th:replace="~{fragments/ui :: buscador('#tablaVentas')}"></div></div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaVentas">
+            <thead><tr><th>Comprobante</th><th>Tipo</th><th>Emisión</th><th>Cliente</th><th class="text-end">Subtotal</th><th class="text-end">IGV</th><th class="text-end">Total</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="v : ${ventas}">
+                <td><a class="fw-semibold" th:href="@{/ventas/{id}(id=${v.id})}" th:text="${v.numeroComprobante}"></a></td>
+                <td th:text="${v.tipoComprobante.label}"></td><td th:text="${@ui.fecha(v.fechaEmision)}"></td>
+                <td th:text="${v.cliente.razonSocial}"></td>
+                <td class="text-end" th:text="${@ui.soles(v.subtotal)}"></td><td class="text-end" th:text="${@ui.soles(v.igv)}"></td>
+                <td class="text-end fw-semibold" th:text="${@ui.soles(v.total)}"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${v.estado})}"></span></td>
+            </tr></tbody>
+        </table></div>
+    </div>
+</div>
+</body>
+</html>

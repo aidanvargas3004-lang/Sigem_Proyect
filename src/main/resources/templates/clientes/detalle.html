@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${cliente.razonSocial}">Cliente</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div>
+            <h1 th:text="${cliente.razonSocial}">Cliente</h1>
+            <p class="subtitulo"><span th:text="|${cliente.tipoDocumento} ${cliente.numeroDocumento} · ${cliente.tipoCliente.label}|"></span>
+                <span class="badge ms-1" th:classappend="${cliente.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${cliente.activo} ? 'Activo' : 'Inactivo'"></span></p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a sec:authorize="hasAuthority('SOLICITUDES_GESTIONAR')" class="btn btn-primary" th:href="@{/solicitudes/nuevo(clienteId=${cliente.id})}"><i class="bi bi-inbox me-1"></i>Nueva solicitud</a>
+            <a sec:authorize="hasAuthority('CONTRATOS_GESTIONAR')" class="btn btn-outline-primary" th:href="@{/contratos/nuevo(clienteId=${cliente.id})}">Nuevo contrato</a>
+            <a sec:authorize="hasAuthority('CLIENTES_GESTIONAR')" class="btn btn-outline-secondary" th:href="@{/clientes/{id}/editar(id=${cliente.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <form sec:authorize="hasAuthority('CLIENTES_GESTIONAR')" th:action="@{/clientes/{id}/estado(id=${cliente.id})}" method="post"
+                  data-confirmar="¿Cambiar el estado del cliente?">
+                <button class="btn btn-outline-danger" th:text="${cliente.activo} ? 'Desactivar' : 'Activar'"></button>
+            </form>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">Datos generales</div>
+                <div class="card-body">
+                    <dl class="datos mb-0">
+                        <dt>Dirección</dt><dd th:text="${cliente.direccion ?: '-'}"></dd>
+                        <dt>Teléfono</dt><dd th:text="${cliente.telefono ?: '-'}"></dd>
+                        <dt>Correo</dt><dd th:text="${cliente.email ?: '-'}"></dd>
+                        <dt>Observaciones</dt><dd th:text="${cliente.observaciones ?: '-'}"></dd>
+                        <dt>Registrado</dt><dd th:text="|${@ui.fecha(cliente.fechaCreacion)} por ${cliente.creadoPor}|"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="card" id="contactos">
+                <div class="card-header">Contactos</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item" th:each="ct : ${cliente.contactos}">
+                        <div class="d-flex justify-content-between">
+                            <strong th:text="${ct.nombres}">Nombre</strong>
+                            <span th:if="${ct.principal}" class="badge text-bg-warning">Principal</span>
+                        </div>
+                        <small class="d-block text-muted" th:text="${ct.cargo}"></small>
+                        <small class="d-block" th:text="|${ct.telefono ?: ''} ${ct.email ?: ''}|"></small>
+                        <div class="d-flex gap-1 mt-1" sec:authorize="hasAuthority('CLIENTES_GESTIONAR')">
+                            <form th:unless="${ct.principal}" th:action="@{/clientes/{id}/contactos/{c}/principal(id=${cliente.id},c=${ct.id})}" method="post">
+                                <button class="btn btn-sm btn-link p-0 me-2">Hacer principal</button></form>
+                            <form th:action="@{/clientes/{id}/contactos/{c}/eliminar(id=${cliente.id},c=${ct.id})}" method="post" data-confirmar="¿Eliminar este contacto?">
+                                <button class="btn btn-sm btn-link text-danger p-0">Eliminar</button></form>
+                        </div>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(cliente.contactos)}">Sin contactos registrados</li>
+                </ul>
+                <div class="card-body border-top" sec:authorize="hasAuthority('CLIENTES_GESTIONAR')">
+                    <form th:action="@{/clientes/{id}/contactos(id=${cliente.id})}" th:object="${contacto}" method="post">
+                        <input class="form-control form-control-sm mb-2" th:field="*{nombres}" placeholder="Nombre del contacto" required>
+                        <input class="form-control form-control-sm mb-2" th:field="*{cargo}" placeholder="Cargo">
+                        <div class="row g-2 mb-2">
+                            <div class="col"><input class="form-control form-control-sm" th:field="*{telefono}" placeholder="Teléfono"></div>
+                            <div class="col"><input class="form-control form-control-sm" type="email" th:field="*{email}" placeholder="Correo"></div>
+                        </div>
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox" th:field="*{principal}">
+                            <label class="form-check-label small" th:for="${#ids.prev('principal')}">Contacto principal</label></div>
+                        <button class="btn btn-sm btn-outline-primary">Agregar contacto</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tSol" type="button">Solicitudes <span class="badge text-bg-light" th:text="${#lists.size(solicitudes)}"></span></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tCot" type="button">Cotizaciones <span class="badge text-bg-light" th:text="${#lists.size(cotizaciones)}"></span></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tCtr" type="button">Contratos <span class="badge text-bg-light" th:text="${#lists.size(contratos)}"></span></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tOp" type="button">Operaciones <span class="badge text-bg-light" th:text="${#lists.size(alquileres) + #lists.size(servicios)}"></span></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tVen" type="button">Ventas <span class="badge text-bg-light" th:text="${#lists.size(ventas)}"></span></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tOpo" type="button">Oportunidades <span class="badge text-bg-light" th:text="${#lists.size(oportunidades)}"></span></button></li>
+            </ul>
+            <div class="card border-top-0 rounded-top-0">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active table-responsive" id="tSol">
+                        <table class="table table-hover"><thead><tr><th>Código</th><th>Fecha</th><th>Servicio</th><th>Periodo</th><th>Estado</th></tr></thead>
+                            <tbody><tr th:each="s : ${solicitudes}">
+                                <td><a th:href="@{/solicitudes/{id}(id=${s.id})}" th:text="${s.codigo}"></a></td>
+                                <td th:text="${@ui.fecha(s.fechaSolicitud)}"></td><td th:text="${s.tipoServicio.label}"></td>
+                                <td th:text="|${@ui.fecha(s.fechaInicio)} - ${@ui.fecha(s.fechaFin)}|"></td>
+                                <td><span th:replace="~{fragments/ui :: badge(${s.estado})}"></span></td></tr></tbody></table>
+                    </div>
+                    <div class="tab-pane fade table-responsive" id="tCot">
+                        <table class="table table-hover"><thead><tr><th>Código</th><th>Emisión</th><th>Total</th><th>Estado</th></tr></thead>
+                            <tbody><tr th:each="c : ${cotizaciones}">
+                                <td><a th:href="@{/cotizaciones/{id}(id=${c.id})}" th:text="${c.codigo}"></a></td>
+                                <td th:text="${@ui.fecha(c.fechaEmision)}"></td><td th:text="${@ui.soles(c.total)}"></td>
+                                <td><span th:replace="~{fragments/ui :: badge(${c.estado})}"></span></td></tr></tbody></table>
+                    </div>
+                    <div class="tab-pane fade table-responsive" id="tCtr">
+                        <table class="table table-hover"><thead><tr><th>Código</th><th>Objeto</th><th>Vigencia</th><th>Monto</th><th>Estado</th></tr></thead>
+                            <tbody><tr th:each="c : ${contratos}">
+                                <td><a th:href="@{/contratos/{id}(id=${c.id})}" th:text="${c.codigo}"></a></td>
+                                <td th:text="${c.objeto}"></td><td th:text="|${@ui.fecha(c.fechaInicio)} - ${@ui.fecha(c.fechaFin)}|"></td>
+                                <td th:text="${@ui.soles(c.montoTotal)}"></td><td><span th:replace="~{fragments/ui :: badge(${c.estado})}"></span></td></tr></tbody></table>
+                    </div>
+                    <div class="tab-pane fade table-responsive" id="tOp">
+                        <table class="table table-hover"><thead><tr><th>Código</th><th>Unidad</th><th>Inicio</th><th>Monto</th><th>Estado</th></tr></thead>
+                            <tbody>
+                            <tr th:each="o : ${alquileres}"><td><a th:href="@{/alquileres/{id}(id=${o.id})}" th:text="${o.codigo}"></a></td>
+                                <td th:text="${o.unidad.codigo}"></td><td th:text="${@ui.fecha(o.asignacion.fechaInicio)}"></td>
+                                <td th:text="${o.montoTotal != null ? @ui.soles(o.montoTotal) : '-'}"></td><td><span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></td></tr>
+                            <tr th:each="o : ${servicios}"><td><a th:href="@{/servicios/{id}(id=${o.id})}" th:text="${o.codigo}"></a></td>
+                                <td th:text="${o.unidad.codigo}"></td><td th:text="${@ui.fecha(o.asignacion.fechaInicio)}"></td>
+                                <td th:text="${o.montoTotal != null ? @ui.soles(o.montoTotal) : '-'}"></td><td><span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></td></tr>
+                            </tbody></table>
+                    </div>
+                    <div class="tab-pane fade table-responsive" id="tVen">
+                        <table class="table table-hover"><thead><tr><th>Comprobante</th><th>Fecha</th><th>Total</th><th>Estado</th></tr></thead>
+                            <tbody><tr th:each="v : ${ventas}">
+                                <td><a th:href="@{/ventas/{id}(id=${v.id})}" th:text="${v.numeroComprobante}"></a></td>
+                                <td th:text="${@ui.fecha(v.fechaEmision)}"></td><td th:text="${@ui.soles(v.total)}"></td>
+                                <td><span th:replace="~{fragments/ui :: badge(${v.estado})}"></span></td></tr></tbody></table>
+                    </div>
+                    <div class="tab-pane fade table-responsive" id="tOpo">
+                        <table class="table table-hover"><thead><tr><th>Oportunidad</th><th>Etapa</th><th>Monto estimado</th></tr></thead>
+                            <tbody><tr th:each="o : ${oportunidades}">
+                                <td th:text="${o.titulo}"></td><td><span th:replace="~{fragments/ui :: badge(${o.etapa})}"></span></td>
+                                <td th:text="${@ui.soles(o.montoEstimado)}"></td></tr></tbody></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

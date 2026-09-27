@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Cotización</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${cotizacion.nuevo} ? 'Nueva cotización' : 'Editar ' + ${cotizacion.codigo}">Cotización</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/cotizaciones/guardar}" th:object="${cotizacion}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('solicitud', 'Solicitud (opcional)', ${solicitudes}, 'codigo', '(Sin solicitud)')}"></div>
+                    <div class="form-text mt-n2 mb-3">Si elige una solicitud, se usa su cliente y se sugiere una línea con la tarifa de referencia.</div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('cliente', 'Cliente', ${clientes}, 'razonSocial', 'Seleccione...')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('fechaEmision', 'Fecha de emisión', 'date')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('diasValidez', 'Validez (días)', 'number')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('condiciones', 'Condiciones comerciales')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/cotizaciones}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Orden de mantenimiento</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1 th:text="${orden.nuevo} ? 'Nueva orden de mantenimiento' : 'Editar ' + ${orden.codigo}">OT</h1>
+        <p class="subtitulo">No se puede programar el taller en un día en que la unidad está asignada a un cliente, salvo prioridad crítica.</p></div></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/mantenimiento/guardar}" th:object="${orden}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('unidad', 'Unidad', ${unidades}, 'descripcion', 'Seleccione...')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: selectEnum('tipo', 'Tipo', ${tipos}, 'Seleccione...')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: selectEnum('prioridad', 'Prioridad', ${prioridades}, null)}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('fechaProgramada', 'Fecha programada', 'date')}"></div></div>
+                <div class="col-md-8"><div th:replace="~{fragments/ui :: selectEntidad('tecnico', 'Técnico responsable', ${tecnicos}, 'nombreCompleto', '(Sin asignar)')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('descripcion', 'Descripción del trabajo / falla reportada')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/mantenimiento}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

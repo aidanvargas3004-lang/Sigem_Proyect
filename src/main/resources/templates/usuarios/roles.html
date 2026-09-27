@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Roles y permisos</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Roles y permisos</h1><p class="subtitulo"><i class="bi bi-eye"></i> Ver = consultar · <i class="bi bi-pencil-square"></i> Gestionar = registrar, editar y ejecutar acciones</p></div>
+        <a sec:authorize="hasAuthority('USUARIOS_GESTIONAR')" class="btn btn-primary" th:href="@{/roles/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo rol</a>
+    </div>
+    <div class="card"><div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">
+        <thead><tr><th>Módulo</th><th class="text-center small" th:each="r : ${roles}">
+            <a th:href="@{/roles/{id}/editar(id=${r.id})}" th:text="${r.nombre}" th:title="${r.descripcion}"></a></th></tr></thead>
+        <tbody><tr th:each="m : ${modulos}">
+            <td class="small fw-semibold" th:text="${m.label}"></td>
+            <td class="text-center" th:each="r : ${roles}">
+                <i th:if="${r.permisos.contains(m.permisoGestionar)}" class="bi bi-pencil-square text-success" title="Gestionar"></i>
+                <i th:if="${!r.permisos.contains(m.permisoGestionar) and r.permisos.contains(m.permisoVer)}" class="bi bi-eye text-primary" title="Ver"></i>
+                <span th:if="${!r.permisos.contains(m.permisoVer)}" class="text-muted">·</span>
+            </td>
+        </tr></tbody>
+    </table></div></div>
+</div>
+</body>
+</html>

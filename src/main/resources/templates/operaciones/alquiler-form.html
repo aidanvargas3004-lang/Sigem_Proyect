@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Alquiler</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1 th:text="${alquiler.nuevo} ? 'Programar alquiler' : 'Editar ' + ${alquiler.codigo}">Alquiler</h1>
+        <p class="subtitulo">El sistema valida que la unidad y el operador no tengan otra asignación ni mantenimiento en esas fechas.</p></div>
+        <a class="btn btn-outline-secondary" target="_blank" th:href="@{/asignaciones/disponibilidad}"><i class="bi bi-search me-1"></i>Ver disponibilidad</a></div>
+    <form th:action="@{/alquileres/guardar}" th:object="${alquiler}" method="post">
+        <div th:replace="~{fragments/ui :: errores}"></div>
+        <input type="hidden" th:field="*{id}">
+        <div class="card mb-3"><div class="card-header">Cliente</div><div class="card-body row">
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('cliente', 'Cliente', ${clientes}, 'razonSocial', 'Seleccione...')}"></div></div>
+            <div class="col-md-6">
+                <label class="form-label" for="contrato">Contrato (opcional)</label>
+                <select class="form-select" th:field="*{contrato}" data-depende="#cliente">
+                    <option value="">(Sin contrato)</option>
+                    <option th:each="c : ${contratos}" th:value="${c.id}" th:attr="data-padre=${c.cliente.id}"
+                            th:text="|${c.codigo} · ${c.objeto ?: ''} (hasta ${@ui.fecha(c.fechaFin)})|"></option>
+                </select>
+            </div>
+            <div class="col-12"><div th:replace="~{fragments/ui :: campo('ubicacionObra', 'Obra / lugar de trabajo', 'text')}"></div></div>
+        </div></div>
+        <div class="card mb-3"><div class="card-header">Unidad, personal y periodo</div><div class="card-body row">
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('asignacion.unidad', 'Unidad', ${unidades}, 'descripcion', 'Seleccione...')}"></div></div>
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('asignacion.empleado', 'Operador', ${operadores}, 'nombreCompleto', '(Sin operador - alquiler en seco)')}"></div></div>
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('asignacion.fechaInicio', 'Inicio', 'datetime-local')}"></div></div>
+            <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('asignacion.fechaFin', 'Fin', 'datetime-local')}"></div></div>
+        </div></div>
+        <div class="card mb-3"><div class="card-header">Cobro</div><div class="card-body row">
+            <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('modalidad', 'Modalidad de cobro', ${modalidades}, null)}"></div></div>
+            <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('tarifa', 'Tarifa (S/ sin IGV)', 'number')}"></div>
+                <div class="form-text mt-n2">Déjela vacía para usar la tarifa registrada de la unidad.</div></div>
+            <div class="col-12 mt-3"><div th:replace="~{fragments/ui :: areaTexto('observaciones', 'Observaciones')}"></div></div>
+        </div></div>
+        <button class="btn btn-primary"><i class="bi bi-calendar-check me-1"></i>Guardar y reservar</button>
+        <a class="btn btn-light" th:href="@{/alquileres}">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

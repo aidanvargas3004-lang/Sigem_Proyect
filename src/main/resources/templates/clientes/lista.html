@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Clientes</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Clientes</h1><p class="subtitulo">Empresas constructoras, contratistas mineros, gobiernos locales y otros</p></div>
+        <a sec:authorize="hasAuthority('CLIENTES_GESTIONAR')" class="btn btn-primary" th:href="@{/clientes/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nuevo cliente</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom"><div th:replace="~{fragments/ui :: buscador('#tablaClientes')}"></div></div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="tablaClientes">
+                <thead><tr><th>Documento</th><th>Razón social / nombre</th><th>Tipo</th><th>Teléfono</th><th>Correo</th><th>Contactos</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${clientes}">
+                    <td><small class="text-muted" th:text="${c.tipoDocumento}"></small> <span th:text="${c.numeroDocumento}"></span></td>
+                    <td><a class="fw-semibold" th:href="@{/clientes/{id}(id=${c.id})}" th:text="${c.razonSocial}">Cliente</a></td>
+                    <td th:text="${c.tipoCliente.label}"></td>
+                    <td th:text="${c.telefono ?: '-'}"></td>
+                    <td th:text="${c.email ?: '-'}"></td>
+                    <td th:text="${#lists.size(c.contactos)}"></td>
+                    <td><span class="badge" th:classappend="${c.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${c.activo} ? 'Activo' : 'Inactivo'"></span></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(clientes)}" th:replace="~{fragments/ui :: vacio('Aún no hay clientes registrados')}"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

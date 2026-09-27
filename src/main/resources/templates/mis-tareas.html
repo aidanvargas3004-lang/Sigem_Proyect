@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Mis tareas</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Mis tareas</h1><p class="subtitulo">Asignaciones y órdenes de trabajo a su cargo</p></div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-header">Mis asignaciones activas</div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item" th:each="a : ${asignaciones}">
+                        <div class="d-flex justify-content-between">
+                            <strong th:text="|${a.referencia} · ${a.unidad.codigo}|">ALQ</strong>
+                            <span th:replace="~{fragments/ui :: badge(${a.estado})}"></span>
+                        </div>
+                        <div th:text="${a.unidad.descripcion}"></div>
+                        <small class="text-muted" th:text="|${@ui.fecha(a.fechaInicio)} → ${@ui.fecha(a.fechaFin)} · ${a.descripcion}|"></small>
+                    </div>
+                    <div class="list-group-item text-muted" th:if="${#lists.isEmpty(asignaciones)}">No tiene asignaciones activas</div>
+                </div>
+            </div>
+            <div class="card mb-3" th:if="${!#lists.isEmpty(ordenes)}">
+                <div class="card-header">Órdenes de mantenimiento a mi cargo</div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action" th:each="o : ${ordenes}" th:href="@{/mantenimiento/{id}(id=${o.id})}">
+                        <div class="d-flex justify-content-between"><strong th:text="|${o.codigo} · ${o.unidad.codigo}|"></strong>
+                            <span th:replace="~{fragments/ui :: badge(${o.estado})}"></span></div>
+                        <small th:text="|${o.tipo.label} · ${@ui.fecha(o.fechaProgramada)} · ${o.descripcion}|"></small>
+                    </a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Historial reciente</div>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Ref.</th><th>Unidad</th><th>Inicio</th><th>Fin</th><th>Estado</th></tr></thead>
+                        <tbody><tr th:each="a : ${historial}">
+                            <td th:text="${a.referencia}"></td><td th:text="${a.unidad.codigo}"></td>
+                            <td th:text="${@ui.fecha(a.fechaInicio)}"></td><td th:text="${@ui.fecha(a.fechaFin)}"></td>
+                            <td><span th:replace="~{fragments/ui :: badge(${a.estado})}"></span></td>
+                        </tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5" sec:authorize="hasAuthority('GPS_GESTIONAR')">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-geo-alt me-1"></i>Reportar mi ubicación</div>
+                <div class="card-body">
+                    <p class="small text-muted">Use el GPS de su celular para registrar la posición de la unidad que opera.</p>
+                    <form th:action="@{/gps/registrar}" method="post" id="formGps">
+                        <div class="mb-2">
+                            <label class="form-label">Unidad</label>
+                            <select class="form-select" name="unidad" required>
+                                <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.descripcion}"
+                                        th:selected="${!#lists.isEmpty(asignaciones) and asignaciones[0].unidad.id == u.id}"></option>
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col"><label class="form-label">Latitud</label><input class="form-control" name="latitud" id="lat" required></div>
+                            <div class="col"><label class="form-label">Longitud</label><input class="form-control" name="longitud" id="lon" required></div>
+                        </div>
+                        <input class="form-control mb-3" name="referencia" placeholder="Referencia (opcional)">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary" id="btnUbicar"><i class="bi bi-crosshair me-1"></i>Obtener ubicación</button>
+                            <button class="btn btn-primary">Enviar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block layout:fragment="scripts">
+    <script>
+        document.getElementById('btnUbicar')?.addEventListener('click', () => {
+            if (!navigator.geolocation) { alert('Su navegador no permite obtener la ubicación'); return; }
+            navigator.geolocation.getCurrentPosition(p => {
+                document.getElementById('lat').value = p.coords.latitude.toFixed(6);
+                document.getElementById('lon').value = p.coords.longitude.toFixed(6);
+            }, () => alert('No se pudo obtener la ubicación. Verifique los permisos del navegador.'));
+        });
+    </script>
+</th:block>
+</body>
+</html>

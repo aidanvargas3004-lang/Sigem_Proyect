@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Asignación interna</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1>Nueva asignación interna</h1>
+        <p class="subtitulo">Para trabajos propios de la empresa (traslados, trabajos en la base, pruebas). Los alquileres y servicios generan su asignación automáticamente.</p></div></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/asignaciones/guardar}" th:object="${asignacion}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <div class="row">
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('unidad', 'Unidad', ${unidades}, 'descripcion', 'Seleccione...')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('empleado', 'Conductor / operador', ${personal}, 'nombreCompleto', '(Sin personal)')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('fechaInicio', 'Inicio', 'datetime-local')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('fechaFin', 'Fin', 'datetime-local')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: campo('descripcion', 'Descripción del trabajo', 'text')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Registrar</button>
+            <a class="btn btn-light" th:href="@{/asignaciones}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

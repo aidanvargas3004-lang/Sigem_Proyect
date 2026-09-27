@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${repuesto.nombre}">Repuesto</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1 th:text="${repuesto.nombre}">Repuesto</h1>
+            <p class="subtitulo" th:text="|${repuesto.codigo} · ${repuesto.categoria ?: 'Sin categoría'} · Costo ${@ui.soles(repuesto.precioUnitario)} / ${repuesto.unidadMedida}|"></p></div>
+        <a sec:authorize="hasAuthority('ALMACENES_GESTIONAR')" class="btn btn-outline-secondary" th:href="@{/repuestos/{id}/editar(id=${repuesto.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">Stock por almacén</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="i : ${stock}">
+                        <span th:text="${i.almacen.nombre}"></span><strong th:text="|${@ui.num(i.cantidad)} ${repuesto.unidadMedida}|"></strong></li>
+                    <li class="list-group-item d-flex justify-content-between bg-light"><span>Total</span>
+                        <strong th:text="|${@ui.num(stockTotal)} ${repuesto.unidadMedida}|"></strong></li>
+                    <li class="list-group-item small text-muted" th:text="|Stock mínimo: ${@ui.num(repuesto.stockMinimo)}|"></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">Últimos movimientos (kardex)</div>
+                <div class="table-responsive"><table class="table table-sm table-hover">
+                    <thead><tr><th>Fecha</th><th>Tipo</th><th>Almacén</th><th class="text-end">Cantidad</th><th class="text-end">Saldo</th><th>Referencia</th><th>Usuario</th></tr></thead>
+                    <tbody><tr th:each="m : ${movimientos}">
+                        <td th:text="${@ui.fecha(m.fecha)}"></td><td><span th:replace="~{fragments/ui :: badge(${m.tipo})}"></span></td>
+                        <td th:text="${m.almacen.nombre}"></td><td class="text-end" th:text="${@ui.num(m.cantidad)}"></td>
+                        <td class="text-end" th:text="${@ui.num(m.stockResultante)}"></td>
+                        <td><span th:text="${m.referencia}"></span> <small class="text-muted d-block" th:text="${m.observacion}"></small></td>
+                        <td th:text="${m.creadoPor}"></td>
+                    </tr></tbody>
+                </table></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Cotización ' + ${cotizacion.codigo}">Cotización</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}">
+    <style>body{font-size:.9rem;padding:2rem;max-width:900px;margin:auto} .marca{border-bottom:4px solid #f59e0b}</style>
+</head>
+<body onload="window.print()">
+<div class="d-flex justify-content-between align-items-start marca pb-3 mb-4">
+    <div class="d-flex gap-3 align-items-center">
+        <img th:src="@{/img/logo.svg}" width="60" height="60" alt="">
+        <div><h1 class="h4 fw-bold mb-0" th:text="${@ui.empresaNombre}">Empresa</h1>
+            <div class="small" th:text="|RUC ${@ui.empresaRuc} · ${@ui.empresaDireccion}|"></div>
+            <div class="small" th:text="|${@ui.empresaTelefono} · ${@ui.empresaEmail}|"></div></div>
+    </div>
+    <div class="text-end border rounded p-2"><div class="fw-bold">COTIZACIÓN</div><div class="fs-5" th:text="${cotizacion.codigo}"></div></div>
+</div>
+<div class="row mb-3">
+    <div class="col-7"><strong>Cliente:</strong> <span th:text="${cotizacion.cliente.razonSocial}"></span><br>
+        <strong th:text="${cotizacion.cliente.tipoDocumento} + ':'"></strong> <span th:text="${cotizacion.cliente.numeroDocumento}"></span><br>
+        <strong>Dirección:</strong> <span th:text="${cotizacion.cliente.direccion ?: '-'}"></span></div>
+    <div class="col-5 text-end"><strong>Fecha:</strong> <span th:text="${@ui.fecha(cotizacion.fechaEmision)}"></span><br>
+        <strong>Válida hasta:</strong> <span th:text="${@ui.fecha(cotizacion.fechaVencimiento)}"></span><br>
+        <span th:if="${cotizacion.solicitud != null}"><strong>Ref.:</strong> <span th:text="${cotizacion.solicitud.codigo}"></span></span></div>
+</div>
+<table class="table table-bordered">
+    <thead class="table-light"><tr><th>#</th><th>Descripción</th><th>Modalidad</th><th class="text-end">Cantidad</th><th class="text-end">P. unit.</th><th class="text-end">Importe</th></tr></thead>
+    <tbody><tr th:each="d, st : ${cotizacion.detalles}">
+        <td th:text="${st.count}"></td><td th:text="${d.descripcion}"></td><td th:text="${d.modalidad.label}"></td>
+        <td class="text-end" th:text="|${@ui.num(d.cantidad)} ${d.modalidad.unidad}|"></td>
+        <td class="text-end" th:text="${@ui.soles(d.precioUnitario)}"></td><td class="text-end" th:text="${@ui.soles(d.subtotal)}"></td></tr></tbody>
+    <tfoot>
+    <tr><td colspan="5" class="text-end">Subtotal</td><td class="text-end" th:text="${@ui.soles(cotizacion.subtotal)}"></td></tr>
+    <tr><td colspan="5" class="text-end">IGV 18%</td><td class="text-end" th:text="${@ui.soles(cotizacion.igv)}"></td></tr>
+    <tr class="fw-bold"><td colspan="5" class="text-end">TOTAL</td><td class="text-end" th:text="${@ui.soles(cotizacion.total)}"></td></tr>
+    </tfoot>
+</table>
+<div th:if="${cotizacion.condiciones}"><strong>Condiciones:</strong><p style="white-space: pre-line" th:text="${cotizacion.condiciones}"></p></div>
+<p class="small text-muted mt-5">Documento generado por SIGEM el <span th:text="${@ui.fecha(#temporals.createNow())}"></span>.</p>
+</body>
+</html>

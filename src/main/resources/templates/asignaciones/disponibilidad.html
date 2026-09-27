@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Disponibilidad</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1>Disponibilidad de flota y personal</h1>
+        <p class="subtitulo">Unidades y conductores/operadores libres (sin asignaciones ni mantenimientos) en el rango indicado</p></div></div>
+    <div class="card mb-3"><div class="card-body">
+        <form class="row g-2 align-items-end" method="get" th:action="@{/asignaciones/disponibilidad}">
+            <div class="col-md-3"><label class="form-label">Desde</label>
+                <input class="form-control" type="datetime-local" name="inicio" th:value="${#temporals.format(inicio, 'yyyy-MM-dd''T''HH:mm')}"></div>
+            <div class="col-md-3"><label class="form-label">Hasta</label>
+                <input class="form-control" type="datetime-local" name="fin" th:value="${#temporals.format(fin, 'yyyy-MM-dd''T''HH:mm')}"></div>
+            <div class="col-md-3"><label class="form-label">Tipo de unidad</label>
+                <select class="form-select" name="tipo"><option value="">Todos</option>
+                    <option th:each="t : ${tipos}" th:value="${t}" th:text="${t.label}" th:selected="${t == tipo}"></option></select></div>
+            <div class="col-md-3"><button class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Consultar</button></div>
+        </form>
+    </div></div>
+    <div class="row g-3">
+        <div class="col-lg-7"><div class="card">
+            <div class="card-header" th:text="|Unidades disponibles (${#lists.size(unidades)})|"></div>
+            <div class="table-responsive"><table class="table table-hover">
+                <thead><tr><th>Unidad</th><th>Tipo</th><th>Estado actual</th><th>Tarifas</th><th></th></tr></thead>
+                <tbody><tr th:each="u : ${unidades}">
+                    <td><a th:href="@{/unidades/{id}(id=${u.id})}" th:text="${u.codigo}"></a> <small th:text="|${u.marca} ${u.modelo}|"></small>
+                        <span th:if="${u.requiereMantenimiento}" class="badge text-bg-warning" title="Próxima a mantenimiento preventivo">Preventivo próximo</span></td>
+                    <td th:text="${u.tipo.label}"></td><td><span th:replace="~{fragments/ui :: badge(${u.estado})}"></span></td>
+                    <td class="small" th:text="|${u.tarifaHora != null ? @ui.soles(u.tarifaHora) + '/h' : ''} ${u.tarifaDia != null ? @ui.soles(u.tarifaDia) + '/día' : ''}|"></td>
+                    <td><a sec:authorize="hasAuthority('ALQUILERES_GESTIONAR')" class="btn btn-sm btn-outline-primary" th:href="@{/alquileres/nuevo(unidadId=${u.id})}">Alquilar</a></td>
+                </tr></tbody>
+            </table></div>
+            <div th:if="${#lists.isEmpty(unidades)}" th:replace="~{fragments/ui :: vacio('No hay unidades libres en ese horario')}"></div>
+        </div></div>
+        <div class="col-lg-5"><div class="card">
+            <div class="card-header" th:text="|Conductores y operadores disponibles (${#lists.size(personal)})|"></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between" th:each="e : ${personal}">
+                    <span><a th:href="@{/empleados/{id}(id=${e.id})}" th:text="${e.nombreCompleto}"></a><br><small class="text-muted" th:text="${e.cargo.label}"></small></span>
+                    <small class="text-muted text-end" th:text="|Lic. ${e.licenciaCategoria} · vence ${@ui.fecha(e.licenciaVencimiento)}|"></small>
+                </li>
+            </ul>
+            <div th:if="${#lists.isEmpty(personal)}" th:replace="~{fragments/ui :: vacio('No hay personal libre en ese horario')}"></div>
+        </div></div>
+    </div>
+</div>
+</body>
+</html>

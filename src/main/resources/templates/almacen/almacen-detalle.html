@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${almacen.nombre}">Almacén</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1 th:text="${almacen.nombre}">Almacén</h1>
+            <p class="subtitulo" th:text="|${almacen.ubicacion ?: ''} · Stock valorizado: ${@ui.soles(valorizado)}|"></p></div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" th:href="@{/inventario/movimientos(almacenId=${almacen.id})}"><i class="bi bi-list-ul me-1"></i>Kardex</a>
+            <a sec:authorize="hasAuthority('ALMACENES_GESTIONAR')" class="btn btn-outline-secondary" th:href="@{/almacenes/{id}/editar(id=${almacen.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+        </div>
+    </div>
+    <div class="card"><div class="table-responsive"><table class="table table-hover">
+        <thead><tr><th>Código</th><th>Repuesto</th><th class="text-end">Stock</th><th class="text-end">Mínimo</th><th class="text-end">Costo unit.</th><th class="text-end">Valor</th><th></th></tr></thead>
+        <tbody><tr th:each="i : ${stock}">
+            <td th:text="${i.repuesto.codigo}"></td>
+            <td><a th:href="@{/repuestos/{id}(id=${i.repuesto.id})}" th:text="${i.repuesto.nombre}"></a></td>
+            <td class="text-end" th:text="|${@ui.num(i.cantidad)} ${i.repuesto.unidadMedida}|"></td>
+            <td class="text-end" th:text="${@ui.num(i.repuesto.stockMinimo)}"></td>
+            <td class="text-end" th:text="${@ui.soles(i.repuesto.precioUnitario)}"></td>
+            <td class="text-end" th:text="${@ui.soles(i.cantidad.multiply(i.repuesto.precioUnitario))}"></td>
+            <td><span th:if="${i.bajoMinimo}" class="badge text-bg-warning">Bajo mínimo</span></td>
+        </tr></tbody>
+    </table></div>
+        <div th:if="${#lists.isEmpty(stock)}" th:replace="~{fragments/ui :: vacio('Este almacén aún no tiene stock')}"></div>
+    </div>
+</div>
+</body>
+</html>

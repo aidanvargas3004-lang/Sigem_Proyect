@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${compra.codigo}">Compra</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="'Orden de compra ' + ${compra.codigo}"></span> <span th:replace="~{fragments/ui :: badge(${compra.estado})}"></span></h1>
+            <p class="subtitulo" th:text="|${compra.proveedor.razonSocial} · Destino: ${compra.almacen.nombre} · Emitida ${@ui.fecha(compra.fechaEmision)}|"></p></div>
+        <div class="d-flex flex-wrap gap-2" sec:authorize="hasAuthority('COMPRAS_GESTIONAR')">
+            <a th:if="${compra.editable}" class="btn btn-outline-secondary" th:href="@{/compras/{id}/editar(id=${compra.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <form th:if="${compra.editable}" th:action="@{/compras/{id}/aprobar(id=${compra.id})}" method="post" data-confirmar="¿Aprobar la orden de compra?">
+                <button class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Aprobar</button></form>
+            <form th:if="${compra.estado.name() == 'APROBADA'}" th:action="@{/compras/{id}/recibir(id=${compra.id})}" method="post" class="d-flex gap-2"
+                  data-confirmar="¿Confirmar la recepción? El stock ingresará al almacén.">
+                <input class="form-control" name="comprobante" placeholder="N.° factura del proveedor">
+                <button class="btn btn-success text-nowrap"><i class="bi bi-box-arrow-in-down me-1"></i>Recibir</button></form>
+            <form th:if="${compra.estado.name() == 'PENDIENTE' or compra.estado.name() == 'APROBADA'}" th:action="@{/compras/{id}/anular(id=${compra.id})}" method="post"
+                  data-confirmar="¿Anular la orden de compra?"><button class="btn btn-outline-danger">Anular</button></form>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <div class="table-responsive"><table class="table">
+            <thead><tr><th>Repuesto</th><th class="text-end">Cantidad</th><th class="text-end">Precio unit.</th><th class="text-end">Subtotal</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="d : ${compra.detalles}">
+                <td th:text="${d.repuesto.descripcionCompleta}"></td>
+                <td class="text-end" th:text="|${@ui.num(d.cantidad)} ${d.repuesto.unidadMedida}|"></td>
+                <td class="text-end" th:text="${@ui.soles(d.precioUnitario)}"></td>
+                <td class="text-end" th:text="${@ui.soles(d.subtotal)}"></td>
+                <td class="text-end"><form th:if="${compra.editable}" sec:authorize="hasAuthority('COMPRAS_GESTIONAR')"
+                        th:action="@{/compras/{id}/detalles/{d}/eliminar(id=${compra.id},d=${d.id})}" method="post">
+                    <button class="btn btn-sm btn-link text-danger" title="Quitar"><i class="bi bi-trash"></i></button></form></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(compra.detalles)}"><td colspan="5" class="text-center text-muted py-4">Agregue los repuestos a comprar</td></tr>
+            </tbody>
+            <tfoot>
+            <tr><td colspan="3" class="text-end">Subtotal</td><td class="text-end" th:text="${@ui.soles(compra.subtotal)}"></td><td></td></tr>
+            <tr><td colspan="3" class="text-end">IGV (18%)</td><td class="text-end" th:text="${@ui.soles(compra.igv)}"></td><td></td></tr>
+            <tr class="fw-bold"><td colspan="3" class="text-end">Total</td><td class="text-end" th:text="${@ui.soles(compra.total)}"></td><td></td></tr>
+            </tfoot>
+        </table></div>
+        <div class="card-body border-top" th:if="${compra.editable}" sec:authorize="hasAuthority('COMPRAS_GESTIONAR')">
+            <form class="row g-2" th:action="@{/compras/{id}/detalles(id=${compra.id})}" method="post">
+                <div class="col-md-6"><select class="form-select" name="repuestoId" required>
+                    <option value="">Repuesto...</option>
+                    <option th:each="r : ${repuestos}" th:value="${r.id}" th:text="|${r.descripcionCompleta} (último costo ${@ui.soles(r.precioUnitario)})|"></option></select></div>
+                <div class="col-md-2"><input class="form-control" type="number" step="any" min="0.01" name="cantidad" placeholder="Cantidad" required></div>
+                <div class="col-md-2"><input class="form-control" type="number" step="any" min="0" name="precio" placeholder="Precio unit." required></div>
+                <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-plus-lg me-1"></i>Agregar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="card"><div class="card-body small">
+        <span class="text-muted">Comprobante del proveedor:</span> <span th:text="${compra.comprobanteProveedor ?: '-'}"></span> ·
+        <span class="text-muted">Recepción:</span> <span th:text="${@ui.fecha(compra.fechaRecepcion)}"></span> ·
+        <span class="text-muted">Registrada por:</span> <span th:text="${compra.creadoPor}"></span>
+        <p class="mb-0 mt-2" th:if="${compra.observaciones}" th:text="${compra.observaciones}"></p>
+    </div></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Unidad</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${unidad.nuevo} ? 'Nueva unidad' : 'Editar unidad ' + ${unidad.codigo}">Unidad</h1></div>
+    <form th:action="@{/unidades/guardar}" th:object="${unidad}" method="post">
+        <div th:replace="~{fragments/ui :: errores}"></div>
+        <input type="hidden" th:field="*{id}">
+        <div class="card mb-3">
+            <div class="card-header">Identificación</div>
+            <div class="card-body row">
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('codigo', 'Código interno', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: selectEnum('tipo', 'Tipo de unidad', ${tipos}, 'Seleccione...')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('marca', 'Marca', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('modelo', 'Modelo', 'text')}"></div></div>
+                <div class="col-md-2"><div th:replace="~{fragments/ui :: campo('anio', 'Año', 'number')}"></div></div>
+                <div class="col-md-2"><div th:replace="~{fragments/ui :: campo('placa', 'Placa (vehículos)', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('numeroSerie', 'N.° de serie / VIN', 'text')}"></div></div>
+                <div class="col-md-2"><div th:replace="~{fragments/ui :: campo('capacidad', 'Capacidad', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('fechaAdquisicion', 'Fecha de adquisición', 'date')}"></div></div>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">Uso y mantenimiento preventivo <small class="text-muted fw-normal">(vehículos en km, maquinaria en horas)</small></div>
+            <div class="card-body row">
+                <div class="col-md-4" th:if="*{nuevo}"><div th:replace="~{fragments/ui :: campo('lecturaActual', 'Lectura actual (km / h)', 'number')}"></div></div>
+                <div class="col-md-4" th:unless="*{nuevo}"><label class="form-label">Lectura actual</label>
+                    <input class="form-control" th:value="|*{lecturaActual} *{tipo.medida}|" disabled>
+                    <div class="form-text">Se actualiza con las operaciones o desde la ficha de la unidad.</div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('intervaloMantenimiento', 'Intervalo de preventivo (cada km / h)', 'number')}"></div></div>
+                <div class="col-md-4" th:if="*{nuevo}"><div th:replace="~{fragments/ui :: campo('lecturaUltimoMantenimiento', 'Lectura del último preventivo', 'number')}"></div></div>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">Tarifas de referencia (S/ sin IGV) y documentos</div>
+            <div class="card-body row">
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('tarifaHora', 'Tarifa por hora', 'number')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('tarifaDia', 'Tarifa por día', 'number')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('tarifaKm', 'Tarifa por km (vehículos)', 'number')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('vencimientoSoat', 'Vencimiento del SOAT', 'date')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('vencimientoRevisionTecnica', 'Vencimiento de revisión técnica', 'date')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('observaciones', 'Observaciones')}"></div></div>
+            </div>
+        </div>
+        <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+        <a class="btn btn-light" th:href="${unidad.nuevo} ? @{/unidades} : @{/unidades/{id}(id=${unidad.id})}">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

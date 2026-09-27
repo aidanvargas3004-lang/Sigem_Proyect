@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Contrato</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${contrato.nuevo} ? 'Nuevo contrato' : 'Editar ' + ${contrato.codigo}">Contrato</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/contratos/guardar}" th:object="${contrato}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-6" th:if="*{nuevo}"><div th:replace="~{fragments/ui :: selectEntidad('cliente', 'Cliente', ${clientes}, 'razonSocial', 'Seleccione...')}"></div></div>
+                <div class="col-md-6" th:unless="*{nuevo}"><label class="form-label">Cliente</label>
+                    <input class="form-control" th:value="*{cliente.razonSocial}" disabled><input type="hidden" th:field="*{cliente}"></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('objeto', 'Objeto del contrato', 'text')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('fechaInicio', 'Inicio de vigencia', 'date')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('fechaFin', 'Fin de vigencia', 'date')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('montoTotal', 'Monto referencial (S/ con IGV)', 'number')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('condiciones', 'Condiciones y cláusulas principales')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/contratos}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

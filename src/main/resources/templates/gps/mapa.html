@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head>
+    <title>Ubicación GPS</title>
+    <th:block layout:fragment="head"><link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/dist/leaflet.css}"></th:block>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Ubicación GPS de la flota</h1><p class="subtitulo">Última posición reportada por cada unidad</p></div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" th:href="@{/gps/historial}"><i class="bi bi-clock-history me-1"></i>Historial</a>
+            <form sec:authorize="hasAuthority('GPS_GESTIONAR')" th:action="@{/gps/simular}" method="post">
+                <button class="btn btn-outline-primary" title="Genera un reporte GPS para cada unidad en servicio"><i class="bi bi-broadcast me-1"></i>Simular reporte</button></form>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-xl-8"><div id="mapa" class="mapa"></div></div>
+        <div class="col-xl-4">
+            <div class="card mb-3">
+                <div class="card-header">Unidades localizadas</div>
+                <div class="list-group list-group-flush" style="max-height: 280px; overflow-y: auto">
+                    <a class="list-group-item list-group-item-action" th:each="p : ${posiciones}" th:href="@{/gps/recorrido(unidadId=${p.unidad.id})}">
+                        <div class="d-flex justify-content-between"><strong th:text="${p.unidad.codigo}"></strong>
+                            <span th:replace="~{fragments/ui :: badge(${p.unidad.estado})}"></span></div>
+                        <small class="text-muted" th:text="|${@ui.fecha(p.fechaHora)} · ${p.velocidad != null ? p.velocidad + ' km/h' : ''} · ${p.referencia ?: ''}|"></small>
+                    </a>
+                </div>
+            </div>
+            <div class="card" sec:authorize="hasAuthority('GPS_GESTIONAR')">
+                <div class="card-header">Registrar posición</div>
+                <div class="card-body">
+                    <form th:action="@{/gps/registrar}" th:object="${ubicacion}" method="post">
+                        <select class="form-select mb-2" th:field="*{unidad}" required>
+                            <option value="">Unidad...</option>
+                            <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.descripcion}"></option></select>
+                        <div class="row g-2 mb-2">
+                            <div class="col"><input class="form-control" th:field="*{latitud}" id="lat" placeholder="Latitud" required></div>
+                            <div class="col"><input class="form-control" th:field="*{longitud}" id="lon" placeholder="Longitud" required></div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col"><input class="form-control" th:field="*{velocidad}" placeholder="Velocidad km/h"></div>
+                            <div class="col"><input class="form-control" type="datetime-local" th:field="*{fechaHora}"></div>
+                        </div>
+                        <input class="form-control mb-2" th:field="*{referencia}" placeholder="Referencia">
+                        <p class="small text-muted">También puede hacer clic en el mapa para tomar las coordenadas.</p>
+                        <button class="btn btn-primary w-100">Registrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mt-3"><div class="card-body small">
+        <strong>API para dispositivos GPS:</strong> <code>POST /api/gps</code> con cabecera <code>X-API-KEY</code> y cuerpo JSON
+        <code>{"codigoUnidad":"VOL-001","latitud":-16.39,"longitud":-71.54,"velocidad":45,"referencia":"Uchumayo"}</code>
+    </div></div>
+</div>
+<th:block layout:fragment="scripts">
+    <script th:src="@{/webjars/leaflet/1.9.4/dist/leaflet.js}"></script>
+    <script th:inline="javascript">
+        const posiciones = /*[[${marcadores}]]*/ [];
+        const baseLat = /*[[${baseLat}]]*/ -16.41;
+        const baseLon = /*[[${baseLon}]]*/ -71.52;
+        const mapa = L.map('mapa').setView([baseLat, baseLon], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(mapa);
+        const grupo = [];
+        posiciones.forEach(p => {
+            const m = L.marker([p.lat, p.lon]).addTo(mapa)
+                .bindPopup('<strong>' + p.codigo + '</strong><br>' + p.desc + '<br>' + p.estado + ' · ' + p.vel + ' km/h'
+                    + '<br><a href="/gps/recorrido?unidadId=' + p.id + '">Ver recorrido</a>');
+            grupo.push([p.lat, p.lon]);
+        });
+        if (grupo.length > 1) mapa.fitBounds(grupo, {padding: [30, 30]});
+        mapa.on('click', e => {
+            const lat = document.getElementById('lat'), lon = document.getElementById('lon');
+            if (lat && lon) { lat.value = e.latlng.lat.toFixed(6); lon.value = e.latlng.lng.toFixed(6); }
+        });
+    </script>
+</th:block>
+</body>
+</html>

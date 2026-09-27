@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Empleado</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${empleado.nuevo} ? 'Nuevo empleado' : 'Editar empleado'">Empleado</h1></div>
+    <form th:action="@{/empleados/guardar}" th:object="${empleado}" method="post">
+        <div th:replace="~{fragments/ui :: errores}"></div>
+        <input type="hidden" th:field="*{id}">
+        <div class="card mb-3"><div class="card-header">Datos personales y laborales</div>
+            <div class="card-body row">
+                <div class="col-md-2"><div th:replace="~{fragments/ui :: campo('dni', 'DNI', 'text')}"></div></div>
+                <div class="col-md-5"><div th:replace="~{fragments/ui :: campo('nombres', 'Nombres', 'text')}"></div></div>
+                <div class="col-md-5"><div th:replace="~{fragments/ui :: campo('apellidos', 'Apellidos', 'text')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('cargo', 'Cargo', ${cargos}, 'Seleccione...')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('area', 'Área', ${areas}, 'Seleccione...')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('estado', 'Estado', ${estados}, null)}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('telefono', 'Teléfono', 'text')}"></div></div>
+                <div class="col-md-5"><div th:replace="~{fragments/ui :: campo('email', 'Correo', 'email')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('fechaIngreso', 'Fecha de ingreso', 'date')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: campo('direccion', 'Dirección', 'text')}"></div></div>
+            </div>
+        </div>
+        <div class="card mb-3"><div class="card-header">Licencia de conducir <small class="fw-normal text-muted">(obligatoria para conductores y operadores)</small></div>
+            <div class="card-body row">
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('licenciaNumero', 'Número de licencia', 'text')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('licenciaCategoria', 'Categoría (A-IIb, A-IIIc...)', 'text')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('licenciaVencimiento', 'Vencimiento', 'date')}"></div></div>
+            </div>
+        </div>
+        <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+        <a class="btn btn-light" th:href="@{/empleados}">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

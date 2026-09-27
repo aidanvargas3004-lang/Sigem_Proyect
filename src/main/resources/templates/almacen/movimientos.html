@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Kardex</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1>Kardex de inventario</h1><p class="subtitulo">Entradas, salidas, ajustes y transferencias</p></div></div>
+    <div class="card">
+        <div class="card-body border-bottom">
+            <form class="row g-2" method="get" th:action="@{/inventario/movimientos}">
+                <div class="col-auto"><select name="almacenId" class="form-select">
+                    <option value="">Todos los almacenes</option>
+                    <option th:each="a : ${almacenes}" th:value="${a.id}" th:text="${a.nombre}" th:selected="${a.id == almacenId}"></option></select></div>
+                <div class="col-auto"><select name="repuestoId" class="form-select">
+                    <option value="">Todos los repuestos</option>
+                    <option th:each="r : ${repuestos}" th:value="${r.id}" th:text="${r.descripcionCompleta}" th:selected="${r.id == repuestoId}"></option></select></div>
+                <div class="col-auto"><button class="btn btn-outline-primary">Filtrar</button></div>
+            </form>
+        </div>
+        <div class="table-responsive"><table class="table table-sm table-hover">
+            <thead><tr><th>Fecha</th><th>Tipo</th><th>Almacén</th><th>Repuesto</th><th class="text-end">Cantidad</th><th class="text-end">Saldo</th><th>Referencia</th><th>Usuario</th></tr></thead>
+            <tbody><tr th:each="m : ${pagina.content}">
+                <td th:text="${@ui.fecha(m.fecha)}"></td><td><span th:replace="~{fragments/ui :: badge(${m.tipo})}"></span></td>
+                <td th:text="${m.almacen.nombre}"></td><td th:text="${m.repuesto.descripcionCompleta}"></td>
+                <td class="text-end" th:text="${@ui.num(m.cantidad)}"></td><td class="text-end" th:text="${@ui.num(m.stockResultante)}"></td>
+                <td><span th:text="${m.referencia}"></span> <small class="text-muted d-block" th:text="${m.observacion}"></small></td>
+                <td th:text="${m.creadoPor}"></td>
+            </tr></tbody>
+        </table></div>
+        <div th:if="${pagina.empty}" th:replace="~{fragments/ui :: vacio('Sin movimientos')}"></div>
+        <div th:replace="~{fragments/ui :: paginacion(${pagina})}"></div>
+    </div>
+</div>
+</body>
+</html>

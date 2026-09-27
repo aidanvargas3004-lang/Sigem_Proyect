@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Solicitud</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${solicitud.nuevo} ? 'Nueva solicitud' : 'Editar ' + ${solicitud.codigo}">Solicitud</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/solicitudes/guardar}" th:object="${solicitud}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: selectEntidad('cliente', 'Cliente', ${clientes}, 'razonSocial', 'Seleccione...')}"></div></div>
+                <div class="col-md-4">
+                    <label class="form-label" for="contacto">Contacto</label>
+                    <select class="form-select" th:field="*{contacto}" data-depende="#cliente">
+                        <option value="">(Sin contacto)</option>
+                        <option th:each="c : ${contactos}" th:value="${c.id}" th:text="|${c.nombres} - ${c.cargo ?: ''}|" th:attr="data-padre=${c.cliente.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2"><div th:replace="~{fragments/ui :: campo('fechaSolicitud', 'Fecha', 'date')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('tipoServicio', 'Tipo de servicio', ${tiposServicio}, 'Seleccione...')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEnum('tipoUnidad', 'Tipo de unidad requerida', ${tiposUnidad}, '(No especificado)')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('cantidadUnidades', 'Cantidad de unidades', 'number')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('fechaInicio', 'Desde', 'date')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('fechaFin', 'Hasta', 'date')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('origen', 'Obra / origen', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('destino', 'Destino (transporte)', 'text')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('descripcion', 'Descripción del requerimiento')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/solicitudes}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Historial GPS</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1>Historial de posiciones GPS</h1></div><a class="btn btn-outline-secondary" th:href="@{/gps}"><i class="bi bi-map me-1"></i>Mapa</a></div>
+    <div class="card">
+        <div class="table-responsive"><table class="table table-sm table-hover">
+            <thead><tr><th>Fecha y hora</th><th>Unidad</th><th>Latitud</th><th>Longitud</th><th>Velocidad</th><th>Referencia</th><th>Fuente</th><th>Registró</th></tr></thead>
+            <tbody><tr th:each="p : ${pagina.content}">
+                <td th:text="${@ui.fecha(p.fechaHora)}"></td>
+                <td><a th:href="@{/gps/recorrido(unidadId=${p.unidad.id}, fecha=${p.fechaHora.toLocalDate()})}" th:text="${p.unidad.codigo}"></a></td>
+                <td th:text="${#numbers.formatDecimal(p.latitud, 1, 6)}"></td><td th:text="${#numbers.formatDecimal(p.longitud, 1, 6)}"></td>
+                <td th:text="${p.velocidad != null ? p.velocidad + ' km/h' : '-'}"></td><td th:text="${p.referencia ?: '-'}"></td>
+                <td th:text="${p.fuente.label}"></td><td th:text="${p.creadoPor}"></td>
+            </tr></tbody>
+        </table></div>
+        <div th:replace="~{fragments/ui :: paginacion(${pagina})}"></div>
+    </div>
+</div>
+</body>
+</html>

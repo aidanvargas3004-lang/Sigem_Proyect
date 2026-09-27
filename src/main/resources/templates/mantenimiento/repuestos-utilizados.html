@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Repuestos utilizados</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1>Repuestos utilizados</h1><p class="subtitulo">Consumo de repuestos en órdenes de mantenimiento · Total: <strong th:text="${@ui.soles(total)}"></strong></p></div>
+        <a sec:authorize="hasAuthority('REPORTES_VER')" class="btn btn-outline-primary" th:href="@{/reportes/repuestos}"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Reporte</a></div>
+    <div class="card">
+        <div class="card-body border-bottom"><div th:replace="~{fragments/ui :: buscador('#tablaRU')}"></div></div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaRU">
+            <thead><tr><th>Fecha</th><th>OT</th><th>Unidad</th><th>Repuesto</th><th>Almacén</th><th class="text-end">Cantidad</th><th class="text-end">Subtotal</th><th>Registró</th></tr></thead>
+            <tbody><tr th:each="r : ${repuestos}">
+                <td th:text="${@ui.fecha(r.fechaCreacion)}"></td>
+                <td><a th:href="@{/mantenimiento/{id}(id=${r.orden.id})}" th:text="${r.orden.codigo}"></a></td>
+                <td th:text="${r.orden.unidad.codigo}"></td><td th:text="${r.repuesto.descripcionCompleta}"></td>
+                <td th:text="${r.almacen.nombre}"></td><td class="text-end" th:text="|${@ui.num(r.cantidad)} ${r.repuesto.unidadMedida}|"></td>
+                <td class="text-end" th:text="${@ui.soles(r.subtotal)}"></td><td th:text="${r.creadoPor}"></td>
+            </tr></tbody>
+        </table></div>
+        <div th:if="${#lists.isEmpty(repuestos)}" th:replace="~{fragments/ui :: vacio('Aún no se registran repuestos utilizados')}"></div>
+    </div>
+</div>
+</body>
+</html>

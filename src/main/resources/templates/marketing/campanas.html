@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Campañas de marketing</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Campañas de marketing</h1><p class="subtitulo">Acciones comerciales para captar clientes y oportunidades</p></div>
+        <a sec:authorize="hasAuthority('MARKETING_GESTIONAR')" class="btn btn-primary" th:href="@{/campanas/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nueva campaña</a>
+    </div>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Campaña</th><th>Canal</th><th>Público objetivo</th><th>Vigencia</th><th class="text-end">Presupuesto</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${campanas}">
+                    <td><a class="fw-semibold" th:href="@{/campanas/{id}(id=${c.id})}" th:text="${c.nombre}"></a></td>
+                    <td th:text="${c.canal.label}"></td>
+                    <td th:text="${c.publicoObjetivo ?: '-'}"></td>
+                    <td th:text="|${@ui.fecha(c.fechaInicio)} - ${@ui.fecha(c.fechaFin)}|"></td>
+                    <td class="text-end" th:text="${@ui.soles(c.presupuesto)}"></td>
+                    <td><span th:replace="~{fragments/ui :: badge(${c.estado})}"></span></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(campanas)}" th:replace="~{fragments/ui :: vacio('No hay campañas registradas')}"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

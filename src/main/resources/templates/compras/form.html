@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Orden de compra</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${compra.nuevo} ? 'Nueva orden de compra' : 'Editar ' + ${compra.codigo}">Compra</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/compras/guardar}" th:object="${compra}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-5"><div th:replace="~{fragments/ui :: selectEntidad('proveedor', 'Proveedor', ${proveedores}, 'razonSocial', 'Seleccione...')}"></div></div>
+                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEntidad('almacen', 'Almacén de destino', ${almacenes}, 'nombre', 'Seleccione...')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('fechaEmision', 'Fecha de emisión', 'date')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('observaciones', 'Observaciones')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar y agregar repuestos</button>
+            <a class="btn btn-light" th:href="@{/compras}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

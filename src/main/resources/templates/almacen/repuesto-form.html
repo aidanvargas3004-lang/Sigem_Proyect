@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Repuesto</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><h1 th:text="${repuesto.nuevo} ? 'Nuevo repuesto' : 'Editar repuesto'">Repuesto</h1></div>
+    <div class="card"><div class="card-body">
+        <form th:action="@{/repuestos/guardar}" th:object="${repuesto}" method="post">
+            <div th:replace="~{fragments/ui :: errores}"></div>
+            <input type="hidden" th:field="*{id}">
+            <div class="row">
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('codigo', 'Código', 'text')}"></div></div>
+                <div class="col-md-6"><div th:replace="~{fragments/ui :: campo('nombre', 'Nombre', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('categoria', 'Categoría', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('unidadMedida', 'Unidad de medida (UND, GL, KG...)', 'text')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('precioUnitario', 'Costo unitario (S/)', 'number')}"></div></div>
+                <div class="col-md-3"><div th:replace="~{fragments/ui :: campo('stockMinimo', 'Stock mínimo', 'number')}"></div></div>
+                <div class="col-md-3 pt-md-4"><div th:replace="~{fragments/ui :: check('activo', 'Activo')}"></div></div>
+                <div class="col-12"><div th:replace="~{fragments/ui :: areaTexto('descripcion', 'Descripción / compatibilidad')}"></div></div>
+            </div>
+            <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
+            <a class="btn btn-light" th:href="@{/repuestos}">Cancelar</a>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

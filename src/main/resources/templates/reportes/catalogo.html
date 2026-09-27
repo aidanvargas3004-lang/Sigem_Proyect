@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Reportes</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header"><div><h1>Reportes de gestión</h1><p class="subtitulo">Información consolidada para la toma de decisiones · exportable a Excel y PDF</p></div></div>
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-4" th:each="r : ${catalogo}">
+            <a class="card h-100 text-decoration-none text-body" th:href="@{/reportes/{c}(c=${r.key})}">
+                <div class="card-body">
+                    <div class="d-flex gap-3">
+                        <div class="kpi p-0"><div class="icono bg-warning-subtle text-warning-emphasis"><i class="bi bi-bar-chart-line"></i></div></div>
+                        <div><h2 class="h6 fw-bold mb-1" th:text="${r.value[0]}"></h2><p class="small text-muted mb-0" th:text="${r.value[1]}"></p></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

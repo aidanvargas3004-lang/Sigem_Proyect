@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title>Solicitudes</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1>Solicitudes de clientes</h1><p class="subtitulo">Requerimientos de alquiler de maquinaria y transporte de carga</p></div>
+        <a sec:authorize="hasAuthority('SOLICITUDES_GESTIONAR')" class="btn btn-primary" th:href="@{/solicitudes/nuevo}"><i class="bi bi-plus-lg me-1"></i>Nueva solicitud</a>
+    </div>
+    <div class="card">
+        <div class="card-body border-bottom"><div th:replace="~{fragments/ui :: buscador('#tablaSol')}"></div></div>
+        <div class="table-responsive"><table class="table table-hover" id="tablaSol">
+            <thead><tr><th>Código</th><th>Fecha</th><th>Cliente</th><th>Servicio</th><th>Unidad requerida</th><th>Periodo</th><th>Estado</th></tr></thead>
+            <tbody><tr th:each="s : ${solicitudes}">
+                <td><a class="fw-semibold" th:href="@{/solicitudes/{id}(id=${s.id})}" th:text="${s.codigo}"></a></td>
+                <td th:text="${@ui.fecha(s.fechaSolicitud)}"></td><td th:text="${s.cliente.razonSocial}"></td>
+                <td th:text="${s.tipoServicio.label}"></td>
+                <td th:text="${s.tipoUnidad != null ? s.cantidadUnidades + ' × ' + s.tipoUnidad.label : '-'}"></td>
+                <td th:text="|${@ui.fecha(s.fechaInicio)} - ${@ui.fecha(s.fechaFin)}|"></td>
+                <td><span th:replace="~{fragments/ui :: badge(${s.estado})}"></span></td>
+            </tr></tbody>
+        </table></div>
+    </div>
+</div>
+</body>
+</html>

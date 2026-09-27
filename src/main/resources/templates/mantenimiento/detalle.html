@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${orden.codigo}">OT</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="'Orden ' + ${orden.codigo}"></span> <span th:replace="~{fragments/ui :: badge(${orden.estado})}"></span></h1>
+            <p class="subtitulo"><span th:replace="~{fragments/ui :: badge(${orden.tipo})}"></span>
+                <span th:replace="~{fragments/ui :: badge(${orden.prioridad})}"></span>
+                · <a th:href="@{/unidades/{id}(id=${orden.unidad.id})}" th:text="${orden.unidad.descripcion}"></a></p></div>
+        <div class="d-flex flex-wrap gap-2" sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')">
+            <a th:if="${orden.estado.name() == 'PROGRAMADA'}" class="btn btn-outline-secondary" th:href="@{/mantenimiento/{id}/editar(id=${orden.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <form th:if="${orden.estado.name() == 'PROGRAMADA'}" th:action="@{/mantenimiento/{id}/iniciar(id=${orden.id})}" method="post"
+                  data-confirmar="¿Ingresar la unidad a taller? Quedará EN MANTENIMIENTO y no podrá asignarse.">
+                <button class="btn btn-primary"><i class="bi bi-wrench me-1"></i>Iniciar trabajo</button></form>
+            <form th:if="${orden.abierta}" th:action="@{/mantenimiento/{id}/cancelar(id=${orden.id})}" method="post" data-confirmar="¿Cancelar la orden?">
+                <button class="btn btn-outline-danger">Cancelar orden</button></form>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card mb-3"><div class="card-body">
+                <dl class="datos row mb-0">
+                    <dt class="col-sm-3">Descripción</dt><dd class="col-sm-9" th:text="${orden.descripcion}"></dd>
+                    <dt class="col-sm-3">Técnico</dt><dd class="col-sm-9" th:text="${orden.tecnico != null ? orden.tecnico.nombreCompleto : '-'}"></dd>
+                    <dt class="col-sm-3">Programada</dt><dd class="col-sm-9" th:text="${@ui.fecha(orden.fechaProgramada)}"></dd>
+                    <dt class="col-sm-3">Inicio / fin</dt><dd class="col-sm-9" th:text="|${@ui.fecha(orden.fechaInicio)} → ${@ui.fecha(orden.fechaFin)}|"></dd>
+                    <dt class="col-sm-3">Lectura de la unidad</dt><dd class="col-sm-9" th:text="${orden.lecturaUnidad != null ? @ui.num(orden.lecturaUnidad) + ' ' + orden.unidad.tipo.medida : '-'}"></dd>
+                    <dt class="col-sm-3" th:if="${orden.trabajoRealizado}">Trabajo realizado</dt><dd class="col-sm-9" th:if="${orden.trabajoRealizado}" th:text="${orden.trabajoRealizado}"></dd>
+                </dl>
+            </div></div>
+            <div class="card">
+                <div class="card-header">Repuestos utilizados</div>
+                <div class="table-responsive"><table class="table">
+                    <thead><tr><th>Repuesto</th><th>Almacén</th><th class="text-end">Cantidad</th><th class="text-end">Costo unit.</th><th class="text-end">Subtotal</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="r : ${orden.repuestos}">
+                        <td th:text="${r.repuesto.descripcionCompleta}"></td><td th:text="${r.almacen.nombre}"></td>
+                        <td class="text-end" th:text="|${@ui.num(r.cantidad)} ${r.repuesto.unidadMedida}|"></td>
+                        <td class="text-end" th:text="${@ui.soles(r.precioUnitario)}"></td><td class="text-end" th:text="${@ui.soles(r.subtotal)}"></td>
+                        <td class="text-end"><form th:if="${orden.estado.name() == 'EN_PROCESO'}" sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')"
+                                th:action="@{/mantenimiento/{id}/repuestos/{r}/devolver(id=${orden.id},r=${r.id})}" method="post" data-confirmar="¿Devolver el repuesto al almacén?">
+                            <button class="btn btn-sm btn-link text-danger" title="Devolver"><i class="bi bi-arrow-counterclockwise"></i></button></form></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(orden.repuestos)}"><td colspan="6" class="text-center text-muted py-3">Sin repuestos registrados</td></tr>
+                    </tbody>
+                </table></div>
+                <div class="card-body border-top" th:if="${orden.estado.name() == 'EN_PROCESO'}" sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')">
+                    <form class="row g-2" th:action="@{/mantenimiento/{id}/repuestos(id=${orden.id})}" method="post">
+                        <div class="col-md-8"><select class="form-select" name="inventario" required>
+                            <option value="">Repuesto (almacén · stock disponible)...</option>
+                            <option th:each="i : ${stock}" th:value="|${i.repuesto.id}-${i.almacen.id}|"
+                                    th:text="|${i.repuesto.descripcionCompleta} (${i.almacen.nombre} · ${@ui.num(i.cantidad)} ${i.repuesto.unidadMedida})|"></option></select></div>
+                        <div class="col-md-2"><input class="form-control" type="number" step="any" min="0.01" name="cantidad" placeholder="Cant." required></div>
+                        <div class="col-md-2"><button class="btn btn-outline-primary w-100">Registrar</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card mb-3"><div class="card-header">Costos</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>Repuestos</span><span th:text="${@ui.soles(orden.costoRepuestos)}"></span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Mano de obra</span><span th:text="${@ui.soles(orden.costoManoObra)}"></span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Servicios de terceros</span><span th:text="${@ui.soles(orden.costoServiciosTerceros)}"></span></li>
+                    <li class="list-group-item d-flex justify-content-between fw-bold"><span>Total</span><span th:text="${@ui.soles(orden.costoTotal)}"></span></li>
+                </ul>
+            </div>
+            <div class="card" th:if="${orden.estado.name() == 'EN_PROCESO'}" sec:authorize="hasAuthority('MANTENIMIENTO_GESTIONAR')">
+                <div class="card-header">Completar orden</div>
+                <div class="card-body">
+                    <form th:action="@{/mantenimiento/{id}/completar(id=${orden.id})}" method="post" data-confirmar="¿Completar el mantenimiento? La unidad quedará disponible.">
+                        <label class="form-label small">Trabajo realizado</label>
+                        <textarea class="form-control mb-2" name="trabajoRealizado" rows="3" required></textarea>
+                        <label class="form-label small">Mano de obra (S/)</label>
+                        <input class="form-control mb-2" type="number" step="any" min="0" name="costoManoObra" value="0">
+                        <label class="form-label small">Servicios de terceros (S/)</label>
+                        <input class="form-control mb-2" type="number" step="any" min="0" name="costoTerceros" value="0">
+                        <label class="form-label small" th:text="|Lectura al salir de taller (${orden.unidad.tipo.medida}, opcional)|"></label>
+                        <input class="form-control mb-3" type="number" step="any" name="lectura" th:min="${orden.unidad.lecturaActual}" th:placeholder="${@ui.num(orden.unidad.lecturaActual)}">
+                        <p class="small text-muted" th:if="${orden.tipo.name() == 'PREVENTIVO'}">Al completar un preventivo se reinicia el contador del próximo mantenimiento.</p>
+                        <button class="btn btn-success w-100"><i class="bi bi-check2-circle me-1"></i>Completar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/main}">
+<head><title th:text="${op.codigo}">Servicio</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="page-header">
+        <div><h1><span th:text="'Servicio ' + ${op.codigo}"></span> <span th:replace="~{fragments/ui :: badge(${op.estado})}"></span></h1>
+            <p class="subtitulo"><a th:href="@{/clientes/{id}(id=${op.cliente.id})}" th:text="${op.cliente.razonSocial}"></a>
+                <th:block th:if="${op.contrato != null}">· Contrato <a th:href="@{/contratos/{id}(id=${op.contrato.id})}" th:text="${op.contrato.codigo}"></a></th:block>
+                · <strong th:text="|${op.origen} → ${op.destino}|"></strong></p></div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" th:href="@{/gps/recorrido(unidadId=${op.unidad.id})}"><i class="bi bi-geo-alt me-1"></i>Recorrido GPS</a>
+            <a sec:authorize="hasAuthority('SERVICIOS_GESTIONAR')" th:if="${op.estado.name() == 'PROGRAMADO'}" class="btn btn-outline-secondary"
+               th:href="@{/servicios/{id}/editar(id=${op.id})}"><i class="bi bi-pencil me-1"></i>Editar</a>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div th:replace="~{operaciones/comun :: asignacion(${op})}"></div>
+            <div class="card mb-3"><div class="card-header">Carga</div><div class="card-body">
+                <dl class="datos row mb-0">
+                    <dt class="col-sm-4">Tipo de carga</dt><dd class="col-sm-8" th:text="${op.tipoCarga ?: '-'}"></dd>
+                    <dt class="col-sm-4">Peso</dt><dd class="col-sm-8" th:text="${op.pesoToneladas != null ? @ui.num(op.pesoToneladas) + ' t' : '-'}"></dd>
+                    <dt class="col-sm-4">Guía de remisión</dt><dd class="col-sm-8" th:text="${op.guiaRemision ?: '-'}"></dd>
+                    <dt class="col-sm-4">Solicitud</dt><dd class="col-sm-8"><a th:if="${op.solicitud != null}" th:href="@{/solicitudes/{id}(id=${op.solicitud.id})}" th:text="${op.solicitud.codigo}"></a><span th:if="${op.solicitud == null}">-</span></dd>
+                </dl>
+            </div></div>
+            <div class="card"><div class="card-body small">
+                <p class="mb-1" style="white-space: pre-line" th:text="${op.observaciones ?: 'Sin observaciones'}"></p>
+                <span class="text-muted" th:text="|Registrado el ${@ui.fecha(op.fechaCreacion)} por ${op.creadoPor}|"></span>
+            </div></div>
+        </div>
+        <div class="col-lg-5"><div th:replace="~{operaciones/comun :: acciones(${op}, '/servicios', 'S')}"></div></div>
+    </div>
+</div>
+</body>
+</html>

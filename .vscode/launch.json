@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "SIGEM (Spring Boot)",
+      "request": "launch",
+      "mainClass": "com.transmaqsur.sigem.SigemApplication",
+      "projectName": "sigem",
+      "env": {
+        "DB_USER": "postgres",
+        "DB_PASSWORD": "postgres"
+      }
+    }
+  ]
+}
