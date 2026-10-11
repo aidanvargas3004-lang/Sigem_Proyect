@@ -21,6 +21,7 @@ public enum Modulo {
     VENTAS("Ventas y facturación", "/ventas"),
     ALQUILERES("Alquileres", "/alquileres"),
     SERVICIOS("Servicios de transporte", "/servicios"),
+    INCIDENCIAS("Incidencias de servicio", "/incidencias"),
     ASIGNACIONES("Asignación de unidades y personal", "/asignaciones"),
     MANTENIMIENTO("Mantenimiento", "/mantenimiento"),
     GPS("Ubicación GPS", "/gps"),

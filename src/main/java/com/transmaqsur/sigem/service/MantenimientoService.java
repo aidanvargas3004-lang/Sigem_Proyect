@@ -81,8 +81,10 @@ public class MantenimientoService {
         o.setTipo(TipoMantenimiento.PREVENTIVO);
         o.setPrioridad(u.isMantenimientoVencido() ? Prioridad.ALTA : Prioridad.MEDIA);
         o.setFechaProgramada(LocalDate.now().plusDays(1));
-        o.setDescripcion("Mantenimiento preventivo de " + u.getProximoMantenimiento().stripTrailingZeros().toPlainString() + " "
-                + u.getTipo().getMedida() + ": cambio de aceite y filtros, revisión de frenos, sistema hidráulico, neumáticos/orugas y engrase general.");
+        String motivo = u.isAlertaPorFecha() && !u.isMantenimientoVencido() && u.getPorcentajeUso() < 90
+                ? "por calendario (" + u.getProximaFechaMantenimiento() + ")"
+                : "de " + u.getProximoMantenimiento().stripTrailingZeros().toPlainString() + " " + u.getTipo().getMedida();
+        o.setDescripcion("Mantenimiento preventivo " + motivo + ": cambio de aceite y filtros, revisión de frenos, sistema hidráulico, neumáticos/orugas y engrase general.");
         return o;
     }
 
@@ -191,6 +193,7 @@ public class MantenimientoService {
         o.setEstado(EstadoOrden.COMPLETADA);
         if (o.getTipo() == TipoMantenimiento.PREVENTIVO) {
             u.setLecturaUltimoMantenimiento(u.getLecturaActual());
+            u.setFechaUltimoMantenimiento(LocalDate.now());
         }
         ordenRepository.flush();
         unidadService.recalcularEstado(u);

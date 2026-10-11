@@ -1,10 +1,12 @@
 package com.transmaqsur.sigem.service;
 
+import com.transmaqsur.sigem.model.Asignacion;
 import com.transmaqsur.sigem.model.Contrato;
 import com.transmaqsur.sigem.model.Cotizacion;
 import com.transmaqsur.sigem.model.Empleado;
 import com.transmaqsur.sigem.model.Inventario;
 import com.transmaqsur.sigem.model.Unidad;
+import com.transmaqsur.sigem.model.enums.EstadoAsignacion;
 import com.transmaqsur.sigem.model.enums.EstadoContrato;
 import com.transmaqsur.sigem.model.enums.EstadoEmpleado;
 import com.transmaqsur.sigem.model.enums.EstadoOperacion;
@@ -12,6 +14,7 @@ import com.transmaqsur.sigem.model.enums.EstadoUnidad;
 import com.transmaqsur.sigem.model.enums.Modulo;
 import com.transmaqsur.sigem.model.enums.TipoNotificacion;
 import com.transmaqsur.sigem.repository.AlquilerRepository;
+import com.transmaqsur.sigem.repository.AsignacionRepository;
 import com.transmaqsur.sigem.repository.ContratoRepository;
 import com.transmaqsur.sigem.repository.CotizacionRepository;
 import com.transmaqsur.sigem.repository.EmpleadoRepository;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.IsoFields;
 import java.util.List;
 
@@ -49,6 +53,7 @@ public class AlertaService {
     private final CotizacionRepository cotizacionRepository;
     private final AlquilerRepository alquilerRepository;
     private final ServicioTransporteRepository servicioRepository;
+    private final AsignacionRepository asignacionRepository;
 
     public void generarAlertas() {
         LocalDate hoy = LocalDate.now();
@@ -97,6 +102,19 @@ public class AlertaService {
                         TipoNotificacion.ALERTA, "/contratos/" + c.getId(), "CTR-" + c.getId() + "-" + c.getFechaFin());
             }
         }
+        // Servicios y alquileres en curso cuya hora de fin programada ya pasó (pendientes de cierre)
+        LocalDateTime ahora = LocalDateTime.now();
+        for (Asignacion a : asignacionRepository.findByEstadoInOrderByFechaInicioAsc(List.of(EstadoAsignacion.EN_CURSO))) {
+            if (a.getFechaFin().isBefore(ahora)) {
+                notificacionService.notificarPermiso(Modulo.ASIGNACIONES.getPermisoGestionar(), "Servicio pendiente de cierre",
+                        a.getReferencia() + " (" + a.getUnidad().getCodigo() + ") debía terminar el " + a.getFechaFin().toLocalDate()
+                                + " y sigue en curso. Registre la lectura final para cerrarlo y facturarlo.",
+                        TipoNotificacion.ALERTA, "/asignaciones/" + a.getId(), "CIERRE-" + a.getId() + "-" + a.getFechaFin().toLocalDate());
+                notificacionService.notificarEmpleado(a.getEmpleado(), "Cierre pendiente de " + a.getReferencia(),
+                        "Registre la lectura final y la hora de término del trabajo con " + a.getUnidad().getCodigo() + ".",
+                        TipoNotificacion.ALERTA, "/mis-tareas", "CIERRE-" + a.getId() + "-" + a.getFechaFin().toLocalDate());
+            }
+        }
         log.info("Alertas automáticas revisadas");
     }
 
@@ -106,14 +124,19 @@ public class AlertaService {
         }
         boolean vencido = u.isMantenimientoVencido();
         String medida = u.getTipo().getMedida();
-        String msg = u.getDescripcion() + ": lectura " + u.getLecturaActual().stripTrailingZeros().toPlainString() + " " + medida
-                + ", preventivo " + (vencido ? "vencido" : "próximo") + " a los "
-                + u.getProximoMantenimiento().stripTrailingZeros().toPlainString() + " " + medida + ".";
+        StringBuilder msg = new StringBuilder(u.getDescripcion()).append(": ");
+        msg.append("lectura ").append(u.getLecturaActual().stripTrailingZeros().toPlainString()).append(' ').append(medida)
+                .append(", preventivo a los ").append(u.getProximoMantenimiento().stripTrailingZeros().toPlainString()).append(' ').append(medida);
+        if (u.getProximaFechaMantenimiento() != null) {
+            msg.append(" o el ").append(u.getProximaFechaMantenimiento());
+        }
+        msg.append(vencido ? " (vencido)." : " (próximo).");
         notificacionService.notificarPermiso(Modulo.MANTENIMIENTO.getPermisoGestionar(),
-                vencido ? "Mantenimiento preventivo vencido" : "Mantenimiento preventivo próximo", msg,
+                vencido ? "Mantenimiento preventivo vencido" : "Mantenimiento preventivo próximo", msg.toString(),
                 vencido ? TipoNotificacion.PELIGRO : TipoNotificacion.ALERTA,
                 "/mantenimiento/nuevo?unidadId=" + u.getId(),
-                "MANT-" + u.getId() + "-" + u.getProximoMantenimiento().toPlainString() + (vencido ? "-V" : ""));
+                "MANT-" + u.getId() + "-" + u.getProximoMantenimiento().toPlainString() + "-" + u.getProximaFechaMantenimiento()
+                        + (vencido ? "-V" : ""));
     }
 
     public void revisarStock(Inventario inv) {

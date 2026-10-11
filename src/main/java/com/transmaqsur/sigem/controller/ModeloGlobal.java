@@ -43,6 +43,7 @@ public class ModeloGlobal {
                     new ItemMenu("Alquileres", "bi-calendar2-range", "/alquileres", ALQUILERES),
                     new ItemMenu("Servicios de transporte", "bi-truck", "/servicios", SERVICIOS),
                     new ItemMenu("Asignaciones", "bi-diagram-3", "/asignaciones", ASIGNACIONES),
+                    new ItemMenu("Incidencias", "bi-exclamation-diamond", "/incidencias", INCIDENCIAS),
                     new ItemMenu("Ubicación GPS", "bi-geo-alt", "/gps", GPS))),
             new SeccionMenu("Flota y mantenimiento", List.of(
                     new ItemMenu("Maquinaria y flota", "bi-truck-front", "/unidades", FLOTA),

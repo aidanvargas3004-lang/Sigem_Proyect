@@ -1,6 +1,7 @@
 package com.transmaqsur.sigem.audit;
 
 import com.transmaqsur.sigem.config.JpaAuditoriaConfig;
+import com.transmaqsur.sigem.dao.AuditoriaDao;
 import com.transmaqsur.sigem.model.Auditoria;
 import com.transmaqsur.sigem.model.enums.AccionAuditoria;
 import com.transmaqsur.sigem.repository.AuditoriaRepository;
@@ -12,13 +13,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Pageable;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -30,10 +29,10 @@ import java.util.List;
 public class AuditoriaService {
 
     private final AuditoriaRepository auditoriaRepository;
-    private final JdbcTemplate jdbcTemplate;
+    private final AuditoriaDao auditoriaDao;
 
     /**
-     * Inserta el registro con JDBC en la misma conexión/transacción en curso.
+     * Inserta el registro mediante el DAO JDBC en la misma conexión/transacción en curso.
      * Se usa también desde los listeners de Hibernate, donde no se puede usar el EntityManager.
      */
     public void registrar(AccionAuditoria accion, String entidad, Long entidadId, String detalle) {
@@ -41,8 +40,7 @@ public class AuditoriaService {
     }
 
     public void registrar(String usuario, AccionAuditoria accion, String entidad, Long entidadId, String detalle) {
-        jdbcTemplate.update("insert into auditoria (fecha, usuario, accion, entidad, entidad_id, detalle, ip) values (?,?,?,?,?,?,?)",
-                Timestamp.valueOf(LocalDateTime.now()), recortar(usuario, 50), accion.name(), entidad, entidadId,
+        auditoriaDao.insertar(LocalDateTime.now(), recortar(usuario, 50), accion, entidad, entidadId,
                 recortar(detalle, 4000), ipActual());
     }
 

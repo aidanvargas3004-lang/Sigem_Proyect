@@ -1,10 +1,12 @@
 package com.transmaqsur.sigem.service;
 
+import com.transmaqsur.sigem.dto.UsuarioForm;
 import com.transmaqsur.sigem.exception.NegocioException;
 import com.transmaqsur.sigem.exception.NoEncontradoException;
 import com.transmaqsur.sigem.model.Rol;
 import com.transmaqsur.sigem.model.Usuario;
 import com.transmaqsur.sigem.model.enums.Modulo;
+import com.transmaqsur.sigem.repository.EmpleadoRepository;
 import com.transmaqsur.sigem.repository.RolRepository;
 import com.transmaqsur.sigem.repository.UsuarioRepository;
 import com.transmaqsur.sigem.util.Entidades;
@@ -27,6 +29,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final EmpleadoRepository empleadoRepository;
     private final PasswordEncoder passwordEncoder;
 
     // ------------------------------------------------------------ Usuarios
@@ -62,6 +65,19 @@ public class UsuarioService {
             u.setPassword(passwordEncoder.encode(passwordNueva));
         }
         return u;
+    }
+
+    /** Guarda desde el DTO del formulario: lo convierte a entidad y aplica las reglas. */
+    public Usuario guardar(UsuarioForm form) {
+        Usuario u = new Usuario();
+        u.setId(form.getId());
+        u.setUsername(form.getUsername().trim());
+        u.setNombreCompleto(form.getNombreCompleto().trim());
+        u.setEmail(form.getEmail());
+        u.setRol(obtenerRol(form.getRolId()));
+        u.setEmpleado(form.getEmpleadoId() != null ? empleadoRepository.findById(form.getEmpleadoId())
+                .orElseThrow(() -> new NoEncontradoException("Empleado", form.getEmpleadoId())) : null);
+        return guardar(u, form.getPassword());
     }
 
     public void cambiarEstado(Long id, String usernameActual) {

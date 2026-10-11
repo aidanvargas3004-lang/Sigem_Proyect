@@ -4,9 +4,9 @@
 <head><title>Usuario</title></head>
 <body>
 <div layout:fragment="content">
-    <div class="page-header"><h1 th:text="${usuario.nuevo} ? 'Nuevo usuario' : 'Editar usuario ' + ${usuario.username}">Usuario</h1></div>
+    <div class="page-header"><h1 th:text="${usuarioForm.nuevo} ? 'Nuevo usuario' : 'Editar usuario ' + ${usuarioForm.username}">Usuario</h1></div>
     <div class="card"><div class="card-body">
-        <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="post">
+        <form th:action="@{/usuarios/guardar}" th:object="${usuarioForm}" method="post">
             <div th:replace="~{fragments/ui :: errores}"></div>
             <input type="hidden" th:field="*{id}">
             <div class="row">
@@ -15,12 +15,25 @@
                     <input class="form-control" th:value="*{username}" disabled><input type="hidden" th:field="*{username}"></div>
                 <div class="col-md-8"><div th:replace="~{fragments/ui :: campo('nombreCompleto', 'Nombre completo', 'text')}"></div></div>
                 <div class="col-md-4"><div th:replace="~{fragments/ui :: campo('email', 'Correo', 'email')}"></div></div>
-                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEntidad('rol', 'Rol', ${roles}, 'nombre', 'Seleccione...')}"></div></div>
-                <div class="col-md-4"><div th:replace="~{fragments/ui :: selectEntidad('empleado', 'Empleado vinculado', ${empleados}, 'nombreCompleto', '(Ninguno)')}"></div></div>
-                <div class="col-md-4"><label class="form-label" for="passwordNueva" th:text="*{nuevo} ? 'Contraseña' : 'Nueva contraseña (dejar vacío para no cambiar)'"></label>
-                    <input class="form-control" type="password" id="passwordNueva" name="passwordNueva" minlength="6" th:required="*{nuevo}" autocomplete="new-password"></div>
+                <div class="col-md-4">
+                    <label class="form-label" for="rolId">Rol</label>
+                    <select class="form-select" th:field="*{rolId}" th:errorclass="is-invalid">
+                        <option value="">Seleccione...</option>
+                        <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.nombre}"></option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{rolId}"></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="empleadoId">Empleado vinculado</label>
+                    <select class="form-select" th:field="*{empleadoId}">
+                        <option value="">(Ninguno)</option>
+                        <option th:each="e : ${empleados}" th:value="${e.id}" th:text="${e.nombreCompleto}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4 mt-3"><label class="form-label" for="password" th:text="*{nuevo} ? 'Contraseña' : 'Nueva contraseña (dejar vacío para no cambiar)'"></label>
+                    <input class="form-control" type="password" th:field="*{password}" minlength="6" th:required="*{nuevo}" autocomplete="new-password"></div>
             </div>
-            <p class="small text-muted">Vincule el usuario a un empleado para que vea "Mis tareas" (conductores, operadores y técnicos).</p>
+            <p class="small text-muted mt-3">Vincule el usuario a un empleado para que vea "Mis tareas" (conductores, operadores y técnicos).</p>
             <button class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar</button>
             <a class="btn btn-light" th:href="@{/usuarios}">Cancelar</a>
         </form>

@@ -1,5 +1,7 @@
 package com.transmaqsur.sigem.api;
 
+import com.transmaqsur.sigem.dto.PosicionGpsRequest;
+import com.transmaqsur.sigem.dto.PosicionGpsResponse;
 import com.transmaqsur.sigem.exception.NegocioException;
 import com.transmaqsur.sigem.model.UbicacionGps;
 import com.transmaqsur.sigem.service.GpsService;
@@ -31,16 +33,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GpsApiController {
 
-    public record PosicionRequest(String codigoUnidad, Double latitud, Double longitud, Double velocidad, String referencia) {
-    }
-
-    public record PosicionResponse(String unidad, double latitud, double longitud, Double velocidad, String fechaHora, String estado) {
-        static PosicionResponse de(UbicacionGps g) {
-            return new PosicionResponse(g.getUnidad().getCodigo(), g.getLatitud(), g.getLongitud(), g.getVelocidad(),
-                    g.getFechaHora().toString(), g.getUnidad().getEstado().getLabel());
-        }
-    }
-
     private final GpsService gpsService;
 
     @Value("${sigem.gps.api-key}")
@@ -48,7 +40,7 @@ public class GpsApiController {
 
     @PostMapping
     public ResponseEntity<?> registrar(@RequestHeader(value = "X-API-KEY", required = false) String key,
-                                       @RequestBody PosicionRequest req) {
+                                       @RequestBody PosicionGpsRequest req) {
         if (!apiKey.equals(key)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Clave de dispositivo inválida"));
         }
@@ -57,7 +49,7 @@ public class GpsApiController {
         }
         UbicacionGps g = gpsService.registrarDesdeDispositivo(req.codigoUnidad(), req.latitud(), req.longitud(),
                 req.velocidad(), req.referencia());
-        return ResponseEntity.status(HttpStatus.CREATED).body(PosicionResponse.de(g));
+        return ResponseEntity.status(HttpStatus.CREATED).body(PosicionGpsResponse.de(g));
     }
 
     @GetMapping("/ultimas")
@@ -65,7 +57,7 @@ public class GpsApiController {
         if (!apiKey.equals(key)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Clave de dispositivo inválida"));
         }
-        List<PosicionResponse> lista = gpsService.ultimasPosiciones().stream().map(PosicionResponse::de).toList();
+        List<PosicionGpsResponse> lista = gpsService.ultimasPosiciones().stream().map(PosicionGpsResponse::de).toList();
         return ResponseEntity.ok(lista);
     }
 
