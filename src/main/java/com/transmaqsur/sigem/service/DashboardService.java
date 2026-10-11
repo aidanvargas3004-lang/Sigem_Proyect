@@ -1,10 +1,12 @@
 package com.transmaqsur.sigem.service;
 
+import com.transmaqsur.sigem.dto.ResumenDashboardDTO;
 import com.transmaqsur.sigem.model.Asignacion;
 import com.transmaqsur.sigem.model.Contrato;
 import com.transmaqsur.sigem.model.Inventario;
 import com.transmaqsur.sigem.model.Operacion;
 import com.transmaqsur.sigem.model.Unidad;
+import com.transmaqsur.sigem.model.enums.EstadoIncidencia;
 import com.transmaqsur.sigem.model.enums.EstadoOperacion;
 import com.transmaqsur.sigem.model.enums.EstadoSolicitud;
 import com.transmaqsur.sigem.model.enums.EstadoUnidad;
@@ -12,6 +14,7 @@ import com.transmaqsur.sigem.model.enums.EstadoVenta;
 import com.transmaqsur.sigem.repository.AlquilerRepository;
 import com.transmaqsur.sigem.repository.AsignacionRepository;
 import com.transmaqsur.sigem.repository.ContratoRepository;
+import com.transmaqsur.sigem.repository.IncidenciaRepository;
 import com.transmaqsur.sigem.repository.InventarioRepository;
 import com.transmaqsur.sigem.repository.OrdenMantenimientoRepository;
 import com.transmaqsur.sigem.repository.ServicioTransporteRepository;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -50,27 +54,9 @@ public class DashboardService {
     private final VentaRepository ventaRepository;
     private final SolicitudRepository solicitudRepository;
     private final AsignacionRepository asignacionRepository;
+    private final IncidenciaRepository incidenciaRepository;
 
-    public record Resumen(
-            Map<EstadoUnidad, Long> unidadesPorEstado,
-            long totalUnidades,
-            long operacionesEnCurso,
-            long operacionesProgramadas,
-            long ordenesAbiertas,
-            long solicitudesPendientes,
-            BigDecimal ventasMes,
-            BigDecimal montoPorFacturar,
-            long operacionesPorFacturar,
-            List<Unidad> mantenimientoProximo,
-            List<Inventario> stockBajo,
-            List<Contrato> contratosPorVencer,
-            List<Asignacion> proximasAsignaciones,
-            List<String> mesesLabels,
-            List<BigDecimal> ventasPorMes,
-            int disponibilidadPorcentaje) {
-    }
-
-    public Resumen resumen() {
+    public ResumenDashboardDTO resumen() {
         Map<EstadoUnidad, Long> porEstado = new LinkedHashMap<>();
         long total = 0;
         for (EstadoUnidad e : EstadoUnidad.values()) {
@@ -110,12 +96,17 @@ public class DashboardService {
         List<Asignacion> proximas = asignacionRepository.findByEstadoInOrderByFechaInicioAsc(EstadosActivos.ASIGNACION)
                 .stream().limit(8).toList();
 
-        return new Resumen(porEstado, total,
+        LocalDateTime inicioDia = hoy.atStartOfDay();
+        long serviciosHoy = asignacionRepository.activasEnRango(inicioDia, inicioDia.plusDays(1), EstadosActivos.ASIGNACION).size();
+        long incidenciasAbiertas = incidenciaRepository.countByEstadoIn(List.of(EstadoIncidencia.REPORTADA, EstadoIncidencia.EN_ATENCION));
+
+        return new ResumenDashboardDTO(porEstado, total,
                 alquilerRepository.countByEstado(EstadoOperacion.EN_CURSO) + servicioRepository.countByEstado(EstadoOperacion.EN_CURSO),
                 alquilerRepository.countByEstado(EstadoOperacion.PROGRAMADO) + servicioRepository.countByEstado(EstadoOperacion.PROGRAMADO),
                 ordenRepository.countByEstadoIn(EstadosActivos.ORDEN),
                 solicitudRepository.countByEstado(EstadoSolicitud.REGISTRADA),
                 ventasMes, montoPorFacturar, porFacturar.size(),
-                mantenimiento, inventarioRepository.findBajoMinimo(), porVencer, proximas, meses, ventas, disponibilidad);
+                mantenimiento, inventarioRepository.findBajoMinimo(), porVencer, proximas, meses, ventas, disponibilidad,
+                serviciosHoy, incidenciasAbiertas);
     }
 }

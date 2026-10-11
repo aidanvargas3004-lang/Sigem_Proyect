@@ -55,7 +55,8 @@ public class Ui {
             Map.entry("FUERA_SERVICIO", "danger"), Map.entry("ANULADO", "danger"), Map.entry("ANULADA", "danger"),
             Map.entry("RECHAZADA", "danger"), Map.entry("CANCELADA", "danger"), Map.entry("PERDIDA", "danger"),
             Map.entry("VENCIDA", "danger"), Map.entry("CESADO", "danger"), Map.entry("CRITICA", "danger"),
-            Map.entry("PELIGRO", "danger"), Map.entry("ELIMINAR", "danger"), Map.entry("ACCESO_FALLIDO", "danger"));
+            Map.entry("PELIGRO", "danger"), Map.entry("REPORTADA", "danger"), Map.entry("EN_ATENCION", "warning"),
+            Map.entry("RESUELTA", "success"), Map.entry("ELIMINAR", "danger"), Map.entry("ACCESO_FALLIDO", "danger"));
 
     private static final Map<String, String> ICONOS = Map.of(
             "INFO", "bi-info-circle", "EXITO", "bi-check-circle", "ALERTA", "bi-exclamation-triangle", "PELIGRO", "bi-exclamation-octagon");

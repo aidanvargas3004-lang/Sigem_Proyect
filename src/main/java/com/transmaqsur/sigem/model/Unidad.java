@@ -20,6 +20,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 /** Unidad de la flota: vehículo de carga o maquinaria pesada. */
 @Getter
@@ -90,6 +91,13 @@ public class Unidad extends EntidadBase {
     @Column(nullable = false, precision = 12, scale = 1)
     private BigDecimal lecturaUltimoMantenimiento = BigDecimal.ZERO;
 
+    /** Frecuencia del preventivo por calendario, en días (opcional; se cumple lo que ocurra primero). */
+    @Positive
+    private Integer intervaloDiasMantenimiento;
+
+    /** Fecha del último mantenimiento preventivo. */
+    private LocalDate fechaUltimoMantenimiento;
+
     @PositiveOrZero
     @Column(precision = 10, scale = 2)
     private BigDecimal tarifaHora;
@@ -136,12 +144,38 @@ public class Unidad extends EntidadBase {
                 .divide(intervaloMantenimiento, 0, RoundingMode.HALF_UP).intValue();
     }
 
-    public boolean isRequiereMantenimiento() {
+    /** Fecha en que corresponde el próximo preventivo por calendario (null si no se usa). */
+    public LocalDate getProximaFechaMantenimiento() {
+        if (intervaloDiasMantenimiento == null || fechaUltimoMantenimiento == null) {
+            return null;
+        }
+        return fechaUltimoMantenimiento.plusDays(intervaloDiasMantenimiento);
+    }
+
+    /** Días que faltan para el preventivo por calendario (negativo si está vencido). */
+    public Long getDiasParaMantenimiento() {
+        LocalDate proxima = getProximaFechaMantenimiento();
+        return proxima == null ? null : ChronoUnit.DAYS.between(LocalDate.now(), proxima);
+    }
+
+    private boolean isAlertaPorUso() {
         return lecturaActual.subtract(lecturaUltimoMantenimiento)
                 .compareTo(intervaloMantenimiento.multiply(UMBRAL_ALERTA)) >= 0;
     }
 
+    /** Alerta por calendario cuando queda el 10 % del intervalo de días (mínimo 3 días). */
+    public boolean isAlertaPorFecha() {
+        Long dias = getDiasParaMantenimiento();
+        return dias != null && dias <= Math.max(3, Math.round(intervaloDiasMantenimiento * 0.1));
+    }
+
+    /** Requiere preventivo por km/horas o por fecha, lo que ocurra primero. */
+    public boolean isRequiereMantenimiento() {
+        return isAlertaPorUso() || isAlertaPorFecha();
+    }
+
     public boolean isMantenimientoVencido() {
-        return getRestanteMantenimiento().signum() <= 0;
+        Long dias = getDiasParaMantenimiento();
+        return getRestanteMantenimiento().signum() <= 0 || (dias != null && dias <= 0);
     }
 }

@@ -1,5 +1,6 @@
 package com.transmaqsur.sigem.controller;
 
+import com.transmaqsur.sigem.dto.UsuarioForm;
 import com.transmaqsur.sigem.exception.NegocioException;
 import com.transmaqsur.sigem.model.Rol;
 import com.transmaqsur.sigem.model.Usuario;
@@ -12,13 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /** Usuarios, roles y permisos. */
@@ -28,11 +26,6 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final EmpleadoService empleadoService;
-
-    @InitBinder("usuario")
-    void binder(WebDataBinder binder) {
-        binder.setDisallowedFields("password", "ultimoAcceso");
-    }
 
     // ------------------------------------------------------------ Usuarios
 
@@ -44,24 +37,24 @@ public class UsuarioController {
 
     @GetMapping("/usuarios/nuevo")
     public String nuevo(Model model) {
-        model.addAttribute("usuario", new Usuario());
+        model.addAttribute("usuarioForm", new UsuarioForm());
         return form(model);
     }
 
     @GetMapping("/usuarios/{id}/editar")
     public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("usuario", usuarioService.obtener(id));
+        model.addAttribute("usuarioForm", UsuarioForm.desde(usuarioService.obtener(id)));
         return form(model);
     }
 
     @PostMapping("/usuarios/guardar")
-    public String guardar(@Valid @ModelAttribute("usuario") Usuario usuario, BindingResult br,
-                          @RequestParam(required = false) String passwordNueva, Model model, RedirectAttributes ra) {
+    public String guardar(@Valid @ModelAttribute("usuarioForm") UsuarioForm usuarioForm, BindingResult br,
+                          Model model, RedirectAttributes ra) {
         if (br.hasErrors()) {
             return form(model);
         }
         try {
-            Usuario u = usuarioService.guardar(usuario, passwordNueva);
+            Usuario u = usuarioService.guardar(usuarioForm);
             ra.addFlashAttribute("exito", "Usuario " + u.getUsername() + " guardado");
             return "redirect:/usuarios";
         } catch (NegocioException e) {

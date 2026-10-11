@@ -6,6 +6,7 @@ import com.transmaqsur.sigem.model.enums.EstadoUnidad;
 import com.transmaqsur.sigem.model.enums.TipoUnidad;
 import com.transmaqsur.sigem.repository.UbicacionGpsRepository;
 import com.transmaqsur.sigem.service.AsignacionService;
+import com.transmaqsur.sigem.service.IncidenciaService;
 import com.transmaqsur.sigem.service.MantenimientoService;
 import com.transmaqsur.sigem.service.UnidadService;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class UnidadController {
     private final AsignacionService asignacionService;
     private final MantenimientoService mantenimientoService;
     private final UbicacionGpsRepository gpsRepository;
+    private final IncidenciaService incidenciaService;
 
     @GetMapping
     public String listar(@RequestParam(required = false) EstadoUnidad estado, @RequestParam(required = false) TipoUnidad tipo, Model model) {
@@ -65,6 +67,7 @@ public class UnidadController {
         model.addAttribute("unidad", unidadService.obtener(id));
         model.addAttribute("asignaciones", asignacionService.deUnidad(id));
         model.addAttribute("ordenes", mantenimientoService.deUnidad(id));
+        model.addAttribute("incidencias", incidenciaService.deUnidad(id));
         model.addAttribute("ultimaPosicion", gpsRepository.findFirstByUnidadIdOrderByFechaHoraDesc(id).orElse(null));
         return "unidades/detalle";
     }
