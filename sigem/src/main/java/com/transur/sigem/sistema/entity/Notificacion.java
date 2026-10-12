@@ -34,7 +34,15 @@ public class Notificacion {
     private String tipo; // INFO, WARNING, ERROR, SUCCESS (Para estilos visuales en Thymeleaf)
 
     @Column(nullable = false)
-    private Boolean leida = false; // Controla si ya fue vista por el usuario
+    private Boolean leida = false;
+
+    /** Identifica la alerta automática que la generó (evita duplicados). */
+    @Column(length = 150)
+    private String clave;
+
+    /** Enlace interno a la pantalla relacionada. */
+    @Column(length = 200)
+    private String enlace; // Controla si ya fue vista por el usuario
 
     @Column(nullable = false)
     private LocalDateTime fecha = LocalDateTime.now();

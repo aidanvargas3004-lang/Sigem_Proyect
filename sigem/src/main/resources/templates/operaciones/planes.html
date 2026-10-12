@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Planes preventivos - SIGEM</title>
+  <th:block th:replace="~{operaciones/_styles :: styles}"></th:block>
+</head>
+<body>
+<div class="layout">
+  <div th:replace="~{operaciones/_nav :: sidebar('planes')}"></div>
+  <main class="main">
+    <div class="top">
+      <div class="title"><div class="section-kicker">Producción · RF012</div><h1>Planes de mantenimiento preventivo</h1>
+        <p>Frecuencia por horómetro, kilometraje o fecha. Se alerta al 90 % y se vence al 100 %.</p></div>
+      <a class="btnx" th:href="@{/operaciones/mantenimiento}">Órdenes</a>
+    </div>
+    <div th:if="${mensaje}" class="notice ok" th:text="${mensaje}"></div>
+    <div th:if="${error}" class="notice err" th:text="${error}"></div>
+    <div class="grid2">
+      <div class="tablewrap"><table class="tablex">
+        <thead><tr><th>Unidad</th><th>Actividad</th><th>Criterio</th><th>Último</th><th>Próximo</th><th>Uso</th><th>Situación</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="p : ${planes}">
+          <td th:text="${p.maquinaria.codigoInterno}"></td><td th:text="${p.actividad}"></td>
+          <td th:text="${p.criterio + ' · cada ' + p.frecuencia + ' ' + p.unidad}"></td>
+          <td th:text="${p.porFecha() ? #temporals.format(p.ultimaFecha,'dd-MM-yyyy') : p.ultimoValor + ' ' + p.unidad}"></td>
+          <td th:text="${p.porFecha() ? #temporals.format(p.proximaFecha,'dd-MM-yyyy') : p.proximoValor + ' ' + p.unidad}"></td>
+          <td th:text="${p.porcentaje + '%'}"></td>
+          <td><span class="badge" th:classappend="${p.situacion == 'VENCIDO'} ? ' b-red' : (${p.situacion == 'PROXIMO'} ? ' b-yellow' : ' b-green')" th:text="${p.activo ? p.situacion : 'INACTIVO'}"></span></td>
+          <td><div class="two-actions">
+            <form th:action="@{/operaciones/mantenimiento/planes/{id}/orden(id=${p.id})}" method="post"><button class="btnx" type="submit">Programar</button></form>
+            <form th:action="@{/operaciones/mantenimiento/planes/{id}/estado(id=${p.id})}" method="post"><button class="btnx" type="submit" th:text="${p.activo ? 'Desactivar' : 'Activar'}"></button></form>
+          </div></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(planes)}"><td colspan="8" class="empty">No hay planes registrados.</td></tr>
+        </tbody>
+      </table></div>
+      <section class="formbox">
+        <h2 style="margin-top:0">Nuevo plan</h2>
+        <form th:action="@{/operaciones/mantenimiento/planes}" method="post">
+          <div class="formgrid">
+            <div class="field full"><label>Unidad *</label><select name="maquinariaId" required>
+              <option th:each="q : ${maquinarias}" th:value="${q.id}" th:text="${q.codigoInterno + ' · ' + q.marca + ' ' + q.modelo + ' (' + q.horometroActual + ' h)'}"></option></select></div>
+            <div class="field full"><label>Actividad *</label><input name="actividad" required placeholder="Cambio de aceite y filtros"></div>
+            <div class="field"><label>Criterio *</label><select name="criterio"><option value="HOROMETRO">Horómetro (h)</option><option value="KILOMETRAJE">Kilometraje (km)</option><option value="FECHA">Fecha (días)</option></select></div>
+            <div class="field"><label>Frecuencia *</label><input type="number" step="0.1" name="frecuencia" min="1" required placeholder="250"></div>
+            <div class="field"><label>Lectura del último (opcional)</label><input type="number" step="0.1" name="ultimoValor" placeholder="Actual de la unidad"></div>
+            <div class="field"><label>Fecha del último</label><input type="date" name="ultimaFecha"></div>
+          </div>
+          <div class="actions" style="margin-top:14px"><button class="btnx dark" type="submit">Registrar plan</button></div>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

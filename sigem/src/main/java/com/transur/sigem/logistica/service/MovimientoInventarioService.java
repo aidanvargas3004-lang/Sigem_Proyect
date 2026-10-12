@@ -29,12 +29,12 @@ public class MovimientoInventarioService {
     @Transactional
     public MovimientoInventario registrar(MovimientoRequest request) {
         Repuesto repuesto = repuestoRepository.findById(request.getRepuestoId())
-                .orElseThrow(() -> new RuntimeException("Repuesto no encontrado"));
+                .orElseThrow(() -> new com.transur.sigem.common.exception.RecursoNoEncontradoException("Repuesto", request.getRepuestoId()));
 
         // Validar stock suficiente para SALIDAS
         if ("SALIDA".equals(request.getTipoMovimiento()) &&
                 repuesto.getStockActual() < request.getCantidad()) {
-            throw new RuntimeException("Stock insuficiente. Actual: " + repuesto.getStockActual());
+            throw new com.transur.sigem.common.exception.NegocioException("Stock insuficiente de " + repuesto.getNombre() + ". Actual: " + repuesto.getStockActual());
         }
 
         // Actualizar stock según tipo de movimiento

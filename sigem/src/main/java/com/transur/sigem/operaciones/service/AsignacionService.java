@@ -1,5 +1,7 @@
 package com.transur.sigem.operaciones.service;
 
+import com.transur.sigem.common.exception.NegocioException;
+import com.transur.sigem.common.exception.RecursoNoEncontradoException;
 import com.transur.sigem.maquinaria.entity.Maquinaria;
 import com.transur.sigem.maquinaria.repository.MaquinariaRepository;
 import com.transur.sigem.operaciones.dto.AsignacionRequest;
@@ -27,24 +29,21 @@ public class AsignacionService {
     private final ServicioRepository servicioRepository;
     private final MaquinariaRepository maquinariaRepository;
     private final EmpleadoRepository empleadoRepository;
+    private final ValidadorDisponibilidad validador;
 
     @Transactional
     public AsignacionResponse crear(AsignacionRequest request) {
         Servicio servicio = servicioRepository.findById(request.getServicioId())
-                .orElseThrow(() -> new RuntimeException("Servicio no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Servicio", request.getServicioId()));
 
         Maquinaria maquinaria = maquinariaRepository.findById(request.getMaquinariaId())
-                .orElseThrow(() -> new RuntimeException("Maquinaria no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Maquinaria", request.getMaquinariaId()));
 
         if (!"POR_ASIGNAR".equals(servicio.getEstado()) && !"SUSPENDIDO".equals(servicio.getEstado())) {
-            throw new RuntimeException("El servicio ya no está disponible para una nueva asignación");
+            throw new NegocioException("El servicio ya no está disponible para una nueva asignación");
         }
-        if (!"OPERATIVO".equals(maquinaria.getEstadoOperativo())) {
-            throw new RuntimeException("La maquinaria " + maquinaria.getCodigoInterno() + " no está disponible");
-        }
-        boolean maquinaOcupada = asignacionRepository.findByMaquinariaId(maquinaria.getId()).stream()
-                .anyMatch(a -> "ACTIVA".equals(a.getEstado()));
-        if (maquinaOcupada) throw new RuntimeException("La maquinaria ya tiene una asignación activa");
+        // RF009: conflictos de unidad, operador, mantenimiento y licencia en el rango del servicio
+        validador.validarUnidad(maquinaria, servicio);
 
         Asignacion asignacion = new Asignacion();
         asignacion.setServicio(servicio);
@@ -52,12 +51,8 @@ public class AsignacionService {
 
         if (request.getEmpleadoId() != null) {
             Empleado empleado = empleadoRepository.findById(request.getEmpleadoId())
-                    .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
-            if (!Boolean.TRUE.equals(empleado.getEstado())) throw new RuntimeException("El empleado está inactivo");
-            String cargo = empleado.getCargo() == null ? "" : empleado.getCargo().trim().toUpperCase();
-            if (!List.of("CONDUCTOR", "OPERADOR").contains(cargo)) {
-                throw new RuntimeException("El empleado seleccionado no está habilitado como operador/conductor");
-            }
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.getEmpleadoId()));
+            validador.validarOperador(empleado, servicio);
             asignacion.setEmpleado(empleado);
         }
 
@@ -96,7 +91,7 @@ public class AsignacionService {
     @Transactional
     public AsignacionResponse cancelar(Long id, String motivo) {
         Asignacion a = asignacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Asignación no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Asignación", id));
 
         a.setEstado("CANCELADA");
         if (a.getMaquinaria() != null && !"VENDIDO".equals(a.getMaquinaria().getEstadoOperativo())) {

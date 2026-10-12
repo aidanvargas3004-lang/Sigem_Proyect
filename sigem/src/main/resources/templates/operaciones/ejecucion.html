@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ejecución de servicio - SIGEM</title>
+  <th:block th:replace="~{operaciones/_styles :: styles}"></th:block>
+</head>
+<body>
+<div class="layout">
+  <div th:replace="~{operaciones/_nav :: sidebar('servicios')}"></div>
+  <main class="main">
+    <div class="top">
+      <div class="title">
+        <div class="section-kicker">Producción · RF010 inicio y cierre</div>
+        <h1 th:text="${'Servicio SER-' + s.id}">Servicio</h1>
+        <p><span th:text="${s.contrato.cliente.razonSocial}">Cliente</span> · <span th:text="${s.tipoServicio.nombre}">Tipo</span>
+          · <span th:text="${(s.origen ?: '-') + ' → ' + (s.destino ?: '-')}">Ruta</span></p>
+      </div>
+      <span class="badge" th:classappend="${s.estado == 'EN_CURSO'} ? ' b-blue' : (${s.estado == 'FINALIZADO'} ? ' b-green' : ' b-yellow')" th:text="${s.estado}">ESTADO</span>
+    </div>
+    <div th:if="${mensaje}" class="notice ok" th:text="${mensaje}"></div>
+    <div th:if="${error}" class="notice err" th:text="${error}"></div>
+
+    <div class="cards">
+      <div class="card metric"><small>INICIO PROGRAMADO</small><strong style="font-size:18px" th:text="${#temporals.format(s.fechaProgramada,'dd-MM-yyyy HH:mm')}">-</strong></div>
+      <div class="card metric"><small>FIN PROGRAMADO</small><strong style="font-size:18px" th:text="${#temporals.format(s.finOcupacion,'dd-MM-yyyy HH:mm')}">-</strong></div>
+      <div class="card metric"><small>HORAS DE USO</small><strong th:text="${s.horasUso != null ? s.horasUso + ' h' : '-'}">-</strong></div>
+      <div class="card metric"><small>KM RECORRIDOS</small><strong th:text="${s.kmRecorridos != null ? s.kmRecorridos + ' km' : '-'}">-</strong></div>
+    </div>
+
+    <div class="grid2">
+      <section class="formbox">
+        <h2 style="margin-top:0">Unidad y operador asignados</h2>
+        <div class="tablewrap" style="box-shadow:none">
+          <table class="tablex">
+            <thead><tr><th>Unidad</th><th>Operador</th><th>Lecturas actuales</th><th>Asignación</th></tr></thead>
+            <tbody>
+            <tr th:each="a : ${asignaciones}">
+              <td><strong th:text="${a.maquinaria.codigoInterno}">M-01</strong><br><span class="mini" th:text="${a.maquinaria.marca + ' ' + a.maquinaria.modelo}"></span></td>
+              <td th:text="${a.empleado != null ? a.empleado.nombres + ' ' + a.empleado.apellidos : '-'}">-</td>
+              <td th:text="${a.maquinaria.horometroActual + ' h · ' + (a.maquinaria.kilometrajeActual ?: 0) + ' km'}">-</td>
+              <td><span class="badge" th:classappend="${a.estado == 'ACTIVA'} ? ' b-blue' : ' b-green'" th:text="${a.estado}">ACTIVA</span></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(asignaciones)}"><td colspan="4" class="empty">Sin unidad asignada. <a th:href="@{/operaciones/asignaciones}">Asignar</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h2 style="margin-top:22px">Lecturas del servicio</h2>
+        <table class="tablex">
+          <tr><th>Concepto</th><th>Inicio</th><th>Cierre</th></tr>
+          <tr><td>Fecha y hora real</td><td th:text="${s.fechaInicioReal != null ? #temporals.format(s.fechaInicioReal,'dd-MM-yyyy HH:mm') : '-'}"></td>
+            <td th:text="${s.fechaFinReal != null ? #temporals.format(s.fechaFinReal,'dd-MM-yyyy HH:mm') : '-'}"></td></tr>
+          <tr><td>Horómetro (h)</td><td th:text="${s.horometroInicial ?: '-'}"></td><td th:text="${s.horometroFinal ?: '-'}"></td></tr>
+          <tr><td>Kilometraje (km)</td><td th:text="${s.kmInicial ?: '-'}"></td><td th:text="${s.kmFinal ?: '-'}"></td></tr>
+        </table>
+        <p class="mini" style="margin-top:10px" th:if="${s.observaciones}" th:text="${s.observaciones}"></p>
+      </section>
+
+      <section class="formbox">
+        <th:block th:if="${s.estado == 'ASIGNADO' and !#lists.isEmpty(asignaciones)}">
+          <h2 style="margin-top:0">Registrar inicio</h2>
+          <p class="muted">Por defecto se toman las lecturas actuales de la unidad.</p>
+          <form th:action="@{/operaciones/servicios/{id}/ejecucion/iniciar(id=${s.id})}" method="post">
+            <div class="formgrid">
+              <div class="field"><label>Horómetro inicial (h)</label><input type="number" step="0.1" name="horometro" th:value="${asignaciones[0].maquinaria.horometroActual}"></div>
+              <div class="field"><label>Kilometraje inicial (km)</label><input type="number" step="0.1" name="km" th:value="${asignaciones[0].maquinaria.kilometrajeActual}"></div>
+              <div class="field full"><label>Fecha y hora de inicio</label><input type="datetime-local" name="fechaHora" th:value="${#temporals.format(ahora,'yyyy-MM-dd''T''HH:mm')}"></div>
+            </div>
+            <div class="actions" style="margin-top:14px"><button class="btnx dark" type="submit"><i class="bi bi-play-fill"></i> Registrar inicio</button></div>
+          </form>
+        </th:block>
+        <th:block th:if="${s.estado == 'EN_CURSO'}">
+          <h2 style="margin-top:0">Registrar cierre</h2>
+          <p class="muted">Al cerrar se calculan las horas y km de uso, se actualiza el horómetro de la unidad y se libera.</p>
+          <form th:action="@{/operaciones/servicios/{id}/ejecucion/finalizar(id=${s.id})}" method="post">
+            <div class="formgrid">
+              <div class="field"><label th:text="${'Horómetro final (h) · inicial ' + s.horometroInicial}">Horómetro final</label><input type="number" step="0.1" name="horometro" th:min="${s.horometroInicial}" required></div>
+              <div class="field"><label th:text="${'Kilometraje final (km) · inicial ' + s.kmInicial}">Km final</label><input type="number" step="0.1" name="km" th:min="${s.kmInicial}"></div>
+              <div class="field full"><label>Fecha y hora de cierre</label><input type="datetime-local" name="fechaHora" th:value="${#temporals.format(ahora,'yyyy-MM-dd''T''HH:mm')}"></div>
+              <div class="field full"><label>Observaciones del cierre</label><textarea name="observaciones" placeholder="Trabajo realizado, conformidad del cliente..."></textarea></div>
+            </div>
+            <div class="actions" style="margin-top:14px"><button class="btnx dark" type="submit"><i class="bi bi-stop-fill"></i> Registrar cierre</button></div>
+          </form>
+        </th:block>
+        <th:block th:if="${s.estado == 'FINALIZADO'}">
+          <h2 style="margin-top:0">Servicio cerrado</h2>
+          <div class="notice ok">Uso facturable: <strong th:text="${s.horasUso + ' h'}"></strong> y <strong th:text="${s.kmRecorridos + ' km'}"></strong>.</div>
+        </th:block>
+        <th:block th:if="${s.estado == 'POR_ASIGNAR'}">
+          <h2 style="margin-top:0">Pendiente de asignación</h2>
+          <p class="muted">Asigne una unidad y un operador para poder iniciar el servicio.</p>
+          <a class="btnx dark" th:href="@{/operaciones/asignaciones}">Ir a asignaciones</a>
+        </th:block>
+
+        <h2 style="margin-top:22px">Reportar posición GPS</h2>
+        <form th:if="${!#lists.isEmpty(asignaciones)}" th:action="@{/operaciones/gps}" method="post">
+          <input type="hidden" name="maquinariaId" th:value="${asignaciones[0].maquinaria.id}">
+          <input type="hidden" name="servicioId" th:value="${s.id}">
+          <input type="hidden" name="volver" th:value="${'/operaciones/servicios/' + s.id + '/ejecucion'}">
+          <div class="formgrid">
+            <div class="field"><label>Latitud</label><input name="latitud" id="lat" required placeholder="-16.39"></div>
+            <div class="field"><label>Longitud</label><input name="longitud" id="lon" required placeholder="-71.53"></div>
+            <div class="field full"><label>Referencia</label><input name="referencia" placeholder="Km 12 carretera a Yura"></div>
+          </div>
+          <div class="actions" style="margin-top:12px">
+            <button type="button" class="btnx" id="btnUbicar"><i class="bi bi-crosshair"></i> Usar mi ubicación</button>
+            <button class="btnx dark" type="submit">Registrar posición</button>
+          </div>
+        </form>
+        <p class="mini" th:if="${!#lists.isEmpty(ubicaciones)}" th:text="${'Última posición: ' + ubicaciones[0].latitud + ', ' + ubicaciones[0].longitud + ' (' + #temporals.format(ubicaciones[0].fechaHora,'dd-MM HH:mm') + ')'}"></p>
+      </section>
+    </div>
+
+    <div class="section">
+      <h2>Incidencias del servicio</h2>
+      <div class="tablewrap"><table class="tablex">
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Estado</th></tr></thead>
+        <tbody>
+        <tr th:each="i : ${incidencias}"><td th:text="${#temporals.format(i.fecha,'dd-MM-yyyy HH:mm')}"></td><td th:text="${i.tipo}"></td>
+          <td th:text="${i.descripcion}"></td><td><span class="badge" th:text="${i.estado}"></span></td></tr>
+        <tr th:if="${#lists.isEmpty(incidencias)}"><td colspan="4" class="empty">Sin incidencias. <a th:href="@{/operaciones/checklist}">Reportar una incidencia</a></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </main>
+</div>
+<script>
+  document.getElementById('btnUbicar')?.addEventListener('click', () => {
+    if (!navigator.geolocation) { alert('El navegador no permite obtener la ubicación'); return; }
+    navigator.geolocation.getCurrentPosition(p => {
+      document.getElementById('lat').value = p.coords.latitude.toFixed(6);
+      document.getElementById('lon').value = p.coords.longitude.toFixed(6);
+    }, () => alert('No se pudo obtener la ubicación'));
+  });
+</script>
+</body>
+</html>

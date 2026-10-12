@@ -19,6 +19,8 @@ public class ServicioRequest {
 
     @NotNull(message = "La fecha programada es obligatoria")
     private LocalDateTime fechaProgramada;
+    @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime fechaFinProgramada;
 
     private String estado = "POR_ASIGNAR";
     private String observaciones;
