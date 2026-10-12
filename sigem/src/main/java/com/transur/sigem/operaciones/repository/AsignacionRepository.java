@@ -14,4 +14,6 @@ public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
 
     // Buscar asignaciones activas de un empleado específico
     List<Asignacion> findByEmpleadoIdAndEstado(Long empleadoId, String estado);
+
+    List<Asignacion> findByMaquinariaIdAndEstado(Long maquinariaId, String estado);
 }

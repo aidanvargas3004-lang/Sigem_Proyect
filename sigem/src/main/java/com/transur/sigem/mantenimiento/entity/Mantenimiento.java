@@ -55,7 +55,21 @@ public class Mantenimiento {
     // PROGRAMADO, EN_PROCESO, COMPLETADO, CANCELADO
 
     @Column(columnDefinition = "TEXT")
-    private String observaciones; // Repuestos adicionales, notas del técnico, etc.
+    private String observaciones;
+
+    /** Plan preventivo que originó la orden (RF012), si aplica. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plan_id")
+    private PlanMantenimiento plan;
+
+    /** Incidencia que originó la orden correctiva (RF011 → RF013), si aplica. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "incidencia_id")
+    private com.transur.sigem.operaciones.entity.Incidencia incidencia;
+
+    /** Horómetro de la unidad al cerrar la orden. */
+    @Column(name = "horometro_registro", precision = 10, scale = 2)
+    private BigDecimal horometroRegistro; // Repuestos adicionales, notas del técnico, etc.
 
     // RELACIÓN: Un mantenimiento puede usar múltiples repuestos
     @OneToMany(mappedBy = "mantenimiento", cascade = CascadeType.ALL, orphanRemoval = true)

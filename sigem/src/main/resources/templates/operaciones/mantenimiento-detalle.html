@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Orden de mantenimiento - SIGEM</title>
+  <th:block th:replace="~{operaciones/_styles :: styles}"></th:block>
+</head>
+<body>
+<div class="layout">
+  <div th:replace="~{operaciones/_nav :: sidebar('mantenimiento')}"></div>
+  <main class="main">
+    <div class="top">
+      <div class="title"><div class="section-kicker" th:text="${m.tipoMantenimiento}">PREVENTIVO</div>
+        <h1 th:text="${'Orden MNT-' + m.id}">Orden</h1>
+        <p th:text="${m.maquinaria.codigoInterno + ' · ' + m.maquinaria.marca + ' ' + m.maquinaria.modelo + ' · unidad ' + m.maquinaria.estadoOperativo}"></p></div>
+      <div class="actions">
+        <form th:if="${m.estado == 'PROGRAMADO'}" th:action="@{/operaciones/mantenimiento/{id}/iniciar(id=${m.id})}" method="post"><button class="btnx dark" type="submit"><i class="bi bi-wrench"></i> Iniciar trabajo</button></form>
+        <form th:if="${m.estado == 'PROGRAMADO'}" th:action="@{/operaciones/mantenimiento/{id}/cancelar(id=${m.id})}" method="post"><button class="btnx" type="submit">Cancelar</button></form>
+        <a class="btnx" th:href="@{/operaciones/mantenimiento}">Volver</a>
+      </div>
+    </div>
+    <div th:if="${mensaje}" class="notice ok" th:text="${mensaje}"></div>
+    <div th:if="${error}" class="notice err" th:text="${error}"></div>
+    <div class="cards">
+      <div class="card metric"><small>ESTADO</small><strong style="font-size:20px" th:text="${m.estado}"></strong></div>
+      <div class="card metric"><small>PROGRAMADA</small><strong style="font-size:20px" th:text="${#temporals.format(m.fechaProgramada,'dd-MM-yyyy')}"></strong></div>
+      <div class="card metric"><small>INICIO / FIN</small><strong style="font-size:16px" th:text="${(m.fechaInicio != null ? #temporals.format(m.fechaInicio,'dd-MM') : '-') + ' / ' + (m.fechaFin != null ? #temporals.format(m.fechaFin,'dd-MM') : '-')}"></strong></div>
+      <div class="card metric"><small>COSTO TOTAL</small><strong style="font-size:20px" th:text="${'S/ ' + #numbers.formatDecimal(m.costo ?: 0, 1, 'COMMA', 2, 'POINT')}"></strong></div>
+    </div>
+    <div class="grid2">
+      <section>
+        <div class="formbox" style="margin-bottom:18px">
+          <h2 style="margin-top:0">Detalle</h2>
+          <p th:text="${m.descripcion}"></p>
+          <p class="mini" th:if="${m.plan != null}" th:text="${'Plan preventivo: ' + m.plan.actividad}"></p>
+          <p class="mini" th:if="${m.incidencia != null}" th:text="${'Origen: incidencia INC-' + m.incidencia.id}"></p>
+          <p class="mini" th:text="${'Técnico: ' + (m.empleado != null ? m.empleado.nombres + ' ' + m.empleado.apellidos : 'sin asignar')}"></p>
+          <p style="white-space:pre-line" th:if="${m.observaciones}" th:text="${m.observaciones}"></p>
+        </div>
+        <h2>Repuestos utilizados</h2>
+        <div class="tablewrap"><table class="tablex">
+          <thead><tr><th>Repuesto</th><th>Cantidad</th><th>Costo unit.</th><th>Subtotal</th></tr></thead>
+          <tbody>
+          <tr th:each="r : ${m.repuestosUsados}"><td th:text="${r.repuesto.codigo + ' · ' + r.repuesto.nombre}"></td><td th:text="${r.cantidad}"></td>
+            <td th:text="${'S/ ' + r.costoUnitario}"></td><td th:text="${'S/ ' + r.costoUnitario.multiply(r.cantidad)}"></td></tr>
+          <tr th:if="${#lists.isEmpty(m.repuestosUsados)}"><td colspan="4" class="empty">Sin repuestos registrados.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+      <section class="formbox" th:if="${m.estado == 'EN_PROCESO'}">
+        <h2 style="margin-top:0">Registrar repuesto</h2>
+        <p class="muted">Se descuenta del stock de Logística (movimiento SALIDA).</p>
+        <form th:action="@{/operaciones/mantenimiento/{id}/repuestos(id=${m.id})}" method="post">
+          <div class="formgrid">
+            <div class="field full"><label>Repuesto</label><select name="repuestoId" required>
+              <option th:each="r : ${repuestos}" th:value="${r.id}" th:text="${r.codigo + ' · ' + r.nombre + ' (stock ' + r.stockActual + ')'}"></option></select></div>
+            <div class="field"><label>Cantidad</label><input type="number" name="cantidad" min="1" value="1" required></div>
+            <div class="field"><label>Costo unitario (S/)</label><input type="number" step="0.01" name="costoUnitario" min="0" required></div>
+          </div>
+          <div class="actions" style="margin-top:12px"><button class="btnx dark" type="submit">Registrar</button></div>
+        </form>
+        <h2 style="margin-top:24px">Completar orden</h2>
+        <form th:action="@{/operaciones/mantenimiento/{id}/completar(id=${m.id})}" method="post">
+          <div class="formgrid">
+            <div class="field full"><label>Trabajo realizado *</label><textarea name="trabajoRealizado" required></textarea></div>
+            <div class="field"><label>Mano de obra (S/)</label><input type="number" step="0.01" name="costoManoObra" min="0" value="0"></div>
+            <div class="field"><label th:text="${'Horómetro al salir (actual ' + m.maquinaria.horometroActual + ' h)'}">Horómetro</label>
+              <input type="number" step="0.1" name="horometro" th:min="${m.maquinaria.horometroActual}"></div>
+          </div>
+          <p class="mini" th:if="${m.plan != null}">Al completar se reinicia el contador del plan preventivo.</p>
+          <div class="actions" style="margin-top:12px"><button class="btnx dark" type="submit"><i class="bi bi-check2-circle"></i> Completar</button></div>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

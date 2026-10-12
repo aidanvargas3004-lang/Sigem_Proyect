@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mantenimiento - SIGEM</title>
+  <th:block th:replace="~{operaciones/_styles :: styles}"></th:block>
+</head>
+<body>
+<div class="layout">
+  <div th:replace="~{operaciones/_nav :: sidebar('mantenimiento')}"></div>
+  <main class="main">
+    <div class="top">
+      <div class="title"><div class="section-kicker">Producción · RF013</div><h1>Órdenes de mantenimiento</h1>
+        <p>Preventivo y correctivo: programada → en proceso (unidad bloqueada) → completada.</p></div>
+      <a class="btnx" th:href="@{/operaciones/mantenimiento/planes}"><i class="bi bi-calendar2-check"></i> Planes preventivos</a>
+    </div>
+    <div th:if="${mensaje}" class="notice ok" th:text="${mensaje}"></div>
+    <div th:if="${error}" class="notice err" th:text="${error}"></div>
+
+    <div class="notice err" th:if="${!#lists.isEmpty(planesAlerta)}">
+      <strong>Preventivos próximos o vencidos:</strong>
+      <span th:each="p, st : ${planesAlerta}" th:text="${p.maquinaria.codigoInterno + ' (' + p.actividad + ', ' + p.porcentaje + '%)' + (st.last ? '' : ' · ')}"></span>
+      — <a th:href="@{/operaciones/mantenimiento/planes}">programar</a>
+    </div>
+
+    <div class="grid2">
+      <section>
+        <div class="search">
+          <a class="btnx" th:classappend="${estado == null or estado == ''} ? ' dark'" th:href="@{/operaciones/mantenimiento}">Todas</a>
+          <a th:each="e : ${ {'PROGRAMADO','EN_PROCESO','COMPLETADO','CANCELADO'} }" class="btnx" th:classappend="${estado == e} ? ' dark'"
+             th:href="@{/operaciones/mantenimiento(estado=${e})}" th:text="${e}"></a>
+        </div>
+        <div class="tablewrap"><table class="tablex">
+          <thead><tr><th>Orden</th><th>Unidad</th><th>Tipo</th><th>Programada</th><th>Técnico</th><th>Costo</th><th>Estado</th></tr></thead>
+          <tbody>
+          <tr th:each="m : ${ordenes}">
+            <td><a th:href="@{/operaciones/mantenimiento/{id}(id=${m.id})}" th:text="${'MNT-' + m.id}">MNT-1</a></td>
+            <td th:text="${m.maquinaria.codigoInterno}">M-01</td>
+            <td><span class="badge" th:classappend="${m.tipoMantenimiento == 'CORRECTIVO'} ? ' b-red' : ' b-blue'" th:text="${m.tipoMantenimiento}"></span></td>
+            <td th:text="${m.fechaProgramada != null ? #temporals.format(m.fechaProgramada,'dd-MM-yyyy') : '-'}"></td>
+            <td th:text="${m.empleado != null ? m.empleado.nombres + ' ' + m.empleado.apellidos : '-'}"></td>
+            <td th:text="${'S/ ' + #numbers.formatDecimal(m.costo ?: 0, 1, 'COMMA', 2, 'POINT')}"></td>
+            <td><span class="badge" th:classappend="${m.estado == 'COMPLETADO'} ? ' b-green' : (${m.estado == 'EN_PROCESO'} ? ' b-yellow' : (${m.estado == 'CANCELADO'} ? ' b-gray' : ' b-blue'))" th:text="${m.estado}"></span></td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(ordenes)}"><td colspan="7" class="empty">No hay órdenes.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+      <section class="formbox">
+        <h2 style="margin-top:0">Programar orden</h2>
+        <form th:action="@{/operaciones/mantenimiento}" method="post">
+          <div class="formgrid">
+            <div class="field full"><label>Unidad *</label><select name="maquinariaId" required><option value="">Seleccione</option>
+              <option th:each="q : ${maquinarias}" th:value="${q.id}" th:text="${q.codigoInterno + ' · ' + q.marca + ' ' + q.modelo + ' (' + q.estadoOperativo + ')'}"></option></select></div>
+            <div class="field"><label>Tipo *</label><select name="tipoMantenimiento" required><option>PREVENTIVO</option><option>CORRECTIVO</option></select></div>
+            <div class="field"><label>Fecha programada *</label><input type="date" name="fechaProgramada" th:value="${hoy}" required></div>
+            <div class="field full"><label>Técnico</label><select name="empleadoId"><option value="">Sin asignar</option>
+              <option th:each="t : ${tecnicos}" th:value="${t.id}" th:text="${t.nombres + ' ' + t.apellidos + ' · ' + t.cargo}"></option></select></div>
+            <div class="field full"><label>Descripción *</label><textarea name="descripcion" required placeholder="Falla reportada o tareas preventivas"></textarea></div>
+          </div>
+          <div class="actions" style="margin-top:14px"><button class="btnx dark" type="submit">Programar</button></div>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+</body>
+</html>

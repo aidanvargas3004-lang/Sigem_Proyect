@@ -28,6 +28,9 @@ public class MaquinariaRequest {
     private String placa;
 
     private BigDecimal horometroActual;
+    private BigDecimal kilometrajeActual;
+    private java.time.LocalDate soatVencimiento;
+    private java.time.LocalDate revisionTecnicaVencimiento;
 
     private String estadoOperativo;
 

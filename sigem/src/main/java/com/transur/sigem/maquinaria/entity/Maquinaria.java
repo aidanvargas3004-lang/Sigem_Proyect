@@ -40,6 +40,17 @@ public class Maquinaria {
     @Column(name = "horometro_actual", precision = 10, scale = 2)
     private BigDecimal horometroActual = BigDecimal.ZERO;
 
+    /** Odómetro para vehículos de carga (km). La maquinaria de obra usa solo el horómetro. */
+    @Column(name = "kilometraje_actual", precision = 12, scale = 2)
+    private BigDecimal kilometrajeActual = BigDecimal.ZERO;
+
+    /** Documentación básica de la unidad (alertas de vencimiento, RF003 / RF014). */
+    @Column(name = "soat_vencimiento")
+    private java.time.LocalDate soatVencimiento;
+
+    @Column(name = "revision_tecnica_vencimiento")
+    private java.time.LocalDate revisionTecnicaVencimiento;
+
     // En Maquinaria.java
     @Column(name = "estado_operativo", nullable = false, length = 30)
     private String estadoOperativo = "OPERATIVO";

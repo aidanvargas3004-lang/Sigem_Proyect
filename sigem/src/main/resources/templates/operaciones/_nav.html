@@ -12,6 +12,10 @@
     <a th:classappend="${active == 'conductores'} ? ' active' : ''" th:href="@{/operaciones/conductores}"><i class="bi bi-person-badge"></i><span>Conductores / Operadores</span></a>
     <a th:classappend="${active == 'asignaciones'} ? ' active' : ''" th:href="@{/operaciones/asignaciones}"><i class="bi bi-arrow-left-right"></i><span>Asignaciones</span></a>
     <a th:classappend="${active == 'checklist'} ? ' active' : ''" th:href="@{/operaciones/checklist}"><i class="bi bi-check2-square"></i><span>Checklist e incidencias</span></a>
+    <a th:classappend="${active == 'mantenimiento'} ? ' active' : ''" th:href="@{/operaciones/mantenimiento}"><i class="bi bi-tools"></i><span>Mantenimiento</span></a>
+    <a th:classappend="${active == 'planes'} ? ' active' : ''" th:href="@{/operaciones/mantenimiento/planes}"><i class="bi bi-calendar2-check"></i><span>Planes preventivos</span></a>
+    <a th:classappend="${active == 'gps'} ? ' active' : ''" th:href="@{/operaciones/gps}"><i class="bi bi-geo-alt"></i><span>Ubicación GPS</span></a>
+    <a th:classappend="${active == 'reportes'} ? ' active' : ''" th:href="@{/reportes}"><i class="bi bi-bar-chart-line"></i><span>Reportes operativos</span></a>
   
     <form th:action="@{/logout}" method="post" style="margin:12px 8px 0;">
       <button type="submit" class="logout-nav-btn"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
