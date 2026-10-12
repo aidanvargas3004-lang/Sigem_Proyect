@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SeguridadIntegracionTest {
 
     @Autowired MockMvc mvc;
+    @Autowired com.transur.sigem.security.repository.UsuarioRepository usuarioRepository;
 
     @Test
     void anonimoEsRedirigidoAlLogin() throws Exception {
@@ -107,5 +108,15 @@ class SeguridadIntegracionTest {
         mvc.perform(post("/api/incidencias").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"tipo\":\"INVENTADO\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "operaciones", roles = "OPERACIONES")
+    void unUsuarioNoLeeNotificacionesAjenasNiLaAuditoria() throws Exception {
+        Long admin = usuarioRepository.findByUsername("admin").orElseThrow().getId();
+        Long propio = usuarioRepository.findByUsername("operaciones").orElseThrow().getId();
+        mvc.perform(get("/api/sistema/notificaciones/count/" + admin)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/sistema/notificaciones/count/" + propio)).andExpect(status().isOk());
+        mvc.perform(get("/api/sistema/auditoria/ultimas")).andExpect(status().isForbidden());
     }
 }

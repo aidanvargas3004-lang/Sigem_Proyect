@@ -107,7 +107,7 @@
             <button class="btnx dark" type="submit">Registrar posición</button>
           </div>
         </form>
-        <p class="mini" th:if="${!#lists.isEmpty(ubicaciones)}" th:text="${'Última posición: ' + ubicaciones[0].latitud + ', ' + ubicaciones[0].longitud + ' (' + #temporals.format(ubicaciones[0].fechaHora,'dd-MM HH:mm') + ')'}"></p>
+        <p class="mini" th:if="${!#lists.isEmpty(ubicaciones)}" th:text="${'Última posición: ' + #numbers.formatDecimal(ubicaciones[0].latitud,1,'NONE',5,'POINT') + ', ' + #numbers.formatDecimal(ubicaciones[0].longitud,1,'NONE',5,'POINT') + ' (' + #temporals.format(ubicaciones[0].fechaHora,'dd-MM HH:mm') + ')'}"></p>
       </section>
     </div>
 

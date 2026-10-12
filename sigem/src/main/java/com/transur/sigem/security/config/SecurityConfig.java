@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/marketing/**", "/api/marketing/**").hasAnyRole("MARKETING", "ADMIN")
                         .requestMatchers("/api/logistica/**", "/api/ordenes-compra/**", "/api/proveedores/**", "/api/recepciones/**").hasAnyRole("LOGISTICA", "ADMIN")
                         .requestMatchers("/api/empleados/**", "/api/documentos/**").hasAnyRole("RRHH", "ADMIN")
+                        .requestMatchers("/api/sistema/auditoria/**").hasRole("ADMIN")
                         .requestMatchers("/api/sistema/**").authenticated()
                         .requestMatchers("/api/**").authenticated()
                         // Módulos por rol. ADMIN conserva acceso total.

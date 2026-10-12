@@ -39,7 +39,7 @@
     <div class="section"><h2>Últimas posiciones</h2><div class="tablewrap"><table class="tablex">
       <thead><tr><th>Unidad</th><th>Estado</th><th>Coordenadas</th><th>Referencia</th><th>Fecha</th><th>Registró</th></tr></thead>
       <tbody><tr th:each="g : ${ultimas}"><td th:text="${g.maquinaria.codigoInterno}"></td><td th:text="${g.maquinaria.estadoOperativo}"></td>
-        <td th:text="${g.latitud + ', ' + g.longitud}"></td><td th:text="${g.referencia ?: '-'}"></td>
+        <td th:text="${#numbers.formatDecimal(g.latitud,1,'NONE',5,'POINT') + ', ' + #numbers.formatDecimal(g.longitud,1,'NONE',5,'POINT')}"></td><td th:text="${g.referencia ?: '-'}"></td>
         <td th:text="${#temporals.format(g.fechaHora,'dd-MM-yyyy HH:mm')}"></td><td th:text="${g.registradoPor}"></td></tr>
         <tr th:if="${#lists.isEmpty(ultimas)}"><td colspan="6" class="empty">Aún no hay posiciones registradas.</td></tr></tbody>
     </table></div></div>
