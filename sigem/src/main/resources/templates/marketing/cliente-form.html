@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${isEdit} ? 'Editar Cliente - SIGEM' : 'Nuevo Cliente - SIGEM'">Cliente - SIGEM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { min-height: 100vh; background: #1e293b; color: white; width: 260px; position: fixed; left: 0; top: 0; z-index: 1000; }
+        .sidebar .nav-link { color: #94a3b8; padding: 12px 20px; border-left: 3px solid transparent; transition: all 0.3s; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: white; background: #334155; border-left-color: #3b82f6; }
+        .main-content { margin-left: 260px; padding: 2rem; }
+        .form-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 2rem; max-width: 800px; }
+        .section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+<nav class="sidebar p-3">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+        <i class="bi bi-box-seam-fill fs-3 text-primary"></i>
+        <h4 class="m-0 fw-bold">SIGEM</h4>
+    </div>
+    <ul class="nav flex-column gap-1">
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/campanias}"><i class="bi bi-megaphone"></i> Campañas</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/leads}"><i class="bi bi-person-lines-fill"></i> Leads</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/oportunidades}"><i class="bi bi-funnel"></i> Oportunidades</a></li>
+        <li class="nav-item"><a class="nav-link active" th:href="@{/marketing/clientes}"><i class="bi bi-building"></i> Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/reportes}"><i class="bi bi-bar-chart-line"></i> Reportes</a></li>
+    </ul>
+    <form th:action="@{/logout}" method="post" class="mt-3 px-2">
+        <button type="submit" class="btn btn-outline-light w-100 text-start">
+            <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+        </button>
+    </form>
+</nav>
+
+<div class="main-content">
+    <!-- Encabezado Dinámico -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <h2 class="fw-bold m-0">
+            <i class="bi bi-plus-circle text-primary me-2" th:if="${!isEdit}"></i>
+            <i class="bi bi-pencil-square text-warning me-2" th:if="${isEdit}"></i>
+            <span th:text="${isEdit} ? 'Editar Cliente' : 'Registrar Nuevo Cliente'">Nuevo Cliente</span>
+        </h2>
+        <a th:href="@{/marketing/clientes}" class="btn btn-outline-secondary btn-sm">Cancelar</a>
+    </div>
+
+    <div class="form-card">
+        <!-- Formulario con Acción Dinámica -->
+        <form th:action="${isEdit} ? @{/marketing/clientes/{id}/actualizar(id=${clienteId})} : @{/marketing/clientes/guardar}"
+              method="post" th:object="${cliente}">
+
+            <!-- SECCIÓN DATOS DEL CLIENTE -->
+            <div class="mb-4">
+                <div class="section-title">Información de la Empresa / Cliente</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">RUC / DNI *</label>
+                        <!-- Bloqueamos RUC al editar para evitar duplicados o errores de PK -->
+                        <input type="text" th:field="*{documento}" class="form-control" required
+                               th:readonly="${isEdit}">
+                        <div class="text-danger small" th:if="${#fields.hasErrors('documento')}" th:errors="*{documento}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Tipo de Cliente *</label>
+                        <select th:field="*{tipoCliente}" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            <option value="JURIDICA">Persona Jurídica (Empresa)</option>
+                            <option value="NATURAL">Persona Natural</option>
+                        </select>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('tipoCliente')}" th:errors="*{tipoCliente}"></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Razón Social / Nombre Completo *</label>
+                        <input type="text" th:field="*{razonSocial}" class="form-control" required>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('razonSocial')}" th:errors="*{razonSocial}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Correo Electrónico</label>
+                        <input type="email" th:field="*{email}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Teléfono</label>
+                        <input type="text" th:field="*{telefono}" class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Dirección</label>
+                        <input type="text" th:field="*{direccion}" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <<!-- SECCIÓN CREDENCIALES (PARA NUEVOS Y EDICIÓN) -->
+            <!-- SECCIÓN CREDENCIALES -->
+            <div class="mb-4">
+                <div class="section-title" th:text="${isEdit} ? 'Cambiar Credenciales de Acceso' : 'Credenciales de Acceso al Portal'">
+                    Credenciales de Acceso
+                </div>
+
+                <!-- Mensaje diferente según sea nuevo o edición -->
+                <div class="alert alert-info py-2 small mb-3" th:if="${!isEdit}">
+                    <i class="bi bi-info-circle me-1"></i> Estos datos permitirán al cliente iniciar sesión en el sistema.
+                </div>
+                <div class="alert alert-warning py-2 small mb-3" th:if="${isEdit}">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Deja la contraseña vacía si no deseas cambiarla. El nombre de usuario actual es:
+                    <strong th:text="${cliente.username}">usuario_actual</strong>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombre de Usuario *</label>
+                        <!-- ✅ autocomplete="off" evita sugerencias del navegador -->
+                        <input type="text" th:field="*{username}" class="form-control"
+                               placeholder="Ej: constructora_andes" required autocomplete="off">
+                        <div class="text-danger small" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                    </div>
+
+                    <!-- Solo mostrar campos de contraseña al editar -->
+                    <div class="col-md-6" th:if="${isEdit}">
+                        <label class="form-label fw-semibold">Nueva Contraseña</label>
+                        <input type="password" th:field="*{newPassword}" class="form-control"
+                               placeholder="Dejar vacío para mantener la actual" autocomplete="new-password">
+                        <div class="text-danger small" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></div>
+                    </div>
+
+                    <div class="col-md-6" th:if="${isEdit}">
+                        <label class="form-label fw-semibold">Confirmar Nueva Contraseña</label>
+                        <input type="password" th:field="*{confirmPassword}" class="form-control"
+                               placeholder="Repite la nueva contraseña" autocomplete="new-password">
+                        <div class="text-danger small" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                    </div>
+
+                    <!-- Campos de contraseña obligatorios SOLO para nuevos clientes -->
+                    <div class="col-md-6" th:if="${!isEdit}">
+                        <label class="form-label fw-semibold">Contraseña *</label>
+                        <!-- ✅ autocomplete="new-password" indica al navegador que NO sugiera contraseñas guardadas -->
+                        <input type="password" th:field="*{newPassword}" class="form-control" required autocomplete="new-password">
+                        <div class="text-danger small" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></div>
+                    </div>
+
+                    <div class="col-md-6" th:if="${!isEdit}">
+                        <label class="form-label fw-semibold">Confirmar Contraseña *</label>
+                        <input type="password" th:field="*{confirmPassword}" class="form-control" required autocomplete="new-password">
+                        <div class="text-danger small" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón Dinámico -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary px-4"
+                        th:text="${isEdit} ? 'Actualizar Cliente' : 'Guardar Cliente y Crear Usuario'">
+                    Guardar Cliente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

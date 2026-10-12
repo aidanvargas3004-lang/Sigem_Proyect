@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquinaria y tarifas - SIGEM</title><th:block th:replace="~{operaciones/_styles :: styles}"></th:block></head>
+<body><div class="layout"><div th:replace="~{operaciones/_nav :: sidebar('maquinaria')}"></div>
+<main class="main">
+  <div th:if="${mensaje}" class="notice ok" th:text="${mensaje}"></div>
+  <div th:if="${error}" class="notice err" th:text="${error}"></div>
+  <div class="top"><div class="title"><div class="section-kicker">Catálogo maestro</div><h1>Maquinaria y tarifas</h1><p>Un solo catálogo alimenta cotizaciones, alquileres, ventas y operaciones.</p></div><a class="btnx dark" th:href="@{/operaciones/programacion}">Ver programación</a></div>
+
+  <div class="module-grid">
+    <a class="module-link" href="#tipos"><i class="bi bi-tags"></i><strong>Tipos de maquinaria</strong><span>Clasificación, descripción e imagen.</span></a>
+    <a class="module-link" href="#flota"><i class="bi bi-truck"></i><strong>Flota</strong><span>Unidades, estado, destino y fotografías.</span></a>
+    <a class="module-link" href="#tarifas"><i class="bi bi-cash-stack"></i><strong>Tarifas</strong><span>Precios por hora, día, semana o mes.</span></a>
+  </div>
+
+  <section id="tipos" class="panel section">
+    <div class="catalog-head"><div><h2>1. Tipos de maquinaria</h2><p class="muted">La foto del tipo funciona también como respaldo visual cuando una unidad no tiene foto propia.</p></div></div>
+    <div class="grid2">
+      <form th:action="@{/operaciones/maquinaria/tipos}" method="post" class="formbox">
+        <h3>Nuevo tipo</h3><div class="formgrid">
+          <div class="field"><label>Nombre</label><input name="nombre" required placeholder="EXCAVADORA"></div>
+          <div class="field full"><label>Descripción</label><textarea name="descripcion" rows="3"></textarea></div>
+          <div class="field full"><label>URL directa de imagen <span class="muted">(opcional)</span></label><input name="imageUrl" type="url" placeholder="https://sitio.com/excavadora.jpg"></div>
+        </div><div class="catalog-note" style="margin-top:12px">Puedes pegar la URL directa de una imagen pública que hayas encontrado en Google Imágenes. No pegues la URL de la página de resultados de Google.</div>
+        <button class="btnx dark" style="margin-top:14px" type="submit">Crear tipo</button>
+      </form>
+      <div class="formbox"><h3>Tipos existentes</h3><div class="type-card-grid">
+        <div class="type-card" th:each="t:${tiposMaquinaria}">
+          <div style="display:flex;gap:10px;align-items:center"><img class="image-preview" th:src="${t.imageUrl != null and !#strings.isEmpty(t.imageUrl) ? t.imageUrl : '/images/maquinaria-placeholder.svg'}" th:alt="${t.nombre}"><div><strong th:text="${t.nombre}">EXCAVADORA</strong><div class="mini" th:text="${t.descripcion ?: 'Sin descripción'}">Descripción</div></div></div>
+          <div class="image-tools">
+            <form th:action="@{/operaciones/maquinaria/tipos/{id}/imagen-url(id=${t.id})}" method="post" class="rowx"><input type="url" name="imageUrl" placeholder="Pegar URL de imagen" required><button class="btnx" type="submit">Usar URL</button></form>
+            <form th:action="@{/operaciones/maquinaria/tipos/{id}/imagen(id=${t.id})}" method="post" enctype="multipart/form-data" class="rowx"><input type="file" name="file" accept="image/*" required><button class="btnx" type="submit">Subir desde PC</button></form>
+          </div>
+        </div>
+        <div th:if="${#lists.isEmpty(tiposMaquinaria)}" class="empty">No hay tipos registrados.</div>
+      </div></div>
+    </div>
+  </section>
+
+  <section id="flota" class="panel section">
+    <div class="catalog-head"><div><h2>2. Registrar maquinaria</h2><p class="muted">Cada unidad puede tener su propia imagen, independiente de la foto de su tipo.</p></div></div>
+    <form th:action="@{/operaciones/maquinaria/registrar}" method="post" class="formbox">
+      <div class="formgrid">
+        <div class="field"><label>Código interno</label><input name="codigoInterno" required placeholder="EXC-001"></div>
+        <div class="field"><label>Tipo</label><select name="tipoId" required><option value="">Seleccione...</option><option th:each="t:${tiposMaquinaria}" th:value="${t.id}" th:text="${t.nombre}">EXCAVADORA</option></select></div>
+        <div class="field"><label>Marca</label><input name="marca" required></div><div class="field"><label>Modelo</label><input name="modelo" required></div>
+        <div class="field"><label>Año</label><input name="anio" type="number" min="1900" max="2100" required></div><div class="field"><label>Placa</label><input name="placa"></div>
+        <div class="field"><label>Horómetro</label><input name="horometroActual" type="number" step="0.01" value="0"></div>
+        <div class="field"><label>Destino</label><select name="destinoOperativo"><option>MULTIPROPOSITO</option><option>ALQUILER</option><option>SERVICIO</option><option>VENTA</option></select></div>
+        <div class="field"><label>Precio base alquiler</label><input name="precioBaseAlquiler" type="number" step="0.01"></div><div class="field"><label>Precio base venta</label><input name="precioBaseVenta" type="number" step="0.01"></div>
+        <div class="field full"><label>URL directa de imagen <span class="muted">(opcional)</span></label><input name="imageUrl" type="url" placeholder="https://sitio.com/maquinaria.jpg"></div>
+      </div>
+      <div class="catalog-note" style="margin-top:12px">Si configuras Cloudinary, la URL remota se importa y queda almacenada como URL HTTPS de Cloudinary. Si no lo configuras, se conserva la URL directa.</div>
+      <button class="btnx dark" style="margin-top:14px" type="submit">Registrar maquinaria</button>
+    </form>
+
+    <div style="margin-top:18px" id="flota-lista"><h3>Flota registrada</h3><div class="tablewrap"><table class="tablex"><thead><tr><th>Imagen</th><th>Código</th><th>Tipo</th><th>Marca / modelo</th><th>Placa</th><th>Destino</th><th>Estado</th><th>Foto propia</th><th>Mantenimientos</th></tr></thead>
+      <tbody><tr th:each="m:${maquinarias}">
+        <td><img class="image-preview" th:src="${m.imageUrl != null and !#strings.isEmpty(m.imageUrl) ? m.imageUrl : (m.tipo.imageUrl != null and !#strings.isEmpty(m.tipo.imageUrl) ? m.tipo.imageUrl : '/images/maquinaria-placeholder.svg')}" th:alt="${m.marca + ' ' + m.modelo}"></td>
+        <td><b th:text="${m.codigoInterno}">M-01</b></td><td th:text="${m.tipo.nombre}">Excavadora</td><td th:text="${m.marca + ' ' + m.modelo}">CAT 320D</td><td th:text="${m.placa ?: '-'}">-</td><td th:text="${m.destinoOperativo}">SERVICIO</td><td><span class="badge" th:text="${m.estadoOperativo}">OPERATIVO</span></td>
+        <td><div class="image-tools"><form th:action="@{/operaciones/maquinaria/{id}/imagen-url(id=${m.id})}" method="post" class="rowx"><input type="url" name="imageUrl" placeholder="URL directa" required><button class="btnx" type="submit">URL</button></form><form th:action="@{/operaciones/maquinaria/{id}/imagen(id=${m.id})}" method="post" enctype="multipart/form-data" class="rowx"><input type="file" name="file" accept="image/*" required><button class="btnx" type="submit">PC</button></form></div></td>
+        <td th:text="${mantenimientos[m.id] ?: 0}">0</td>
+      </tr><tr th:if="${#lists.isEmpty(maquinarias)}"><td colspan="9" class="empty">No hay maquinaria registrada.</td></tr></tbody>
+    </table></div></div>
+  </section>
+
+  <section id="tarifas" class="panel section"><div class="catalog-head"><div><h2>3. Tarifas</h2><p class="muted">Estas tarifas alimentan las cotizaciones y alquileres.</p></div></div>
+    <form th:action="@{/operaciones/maquinaria/tarifas}" method="post" class="formbox"><div class="formgrid">
+      <div class="field"><label>Maquinaria</label><select name="maquinariaId" required><option value="">Seleccione...</option><option th:each="m:${maquinarias}" th:value="${m.id}" th:text="${m.codigoInterno + ' · ' + m.marca + ' ' + m.modelo}">EXC-001</option></select></div>
+      <div class="field"><label>Tipo de tarifa</label><select name="tipoTarifa" required><option>HORA</option><option>DIA</option><option>SEMANA</option><option>MES</option></select></div>
+      <div class="field"><label>Precio</label><input name="precio" type="number" step="0.01" min="0.01" required></div><div class="field"><label>Inicio de vigencia</label><input name="vigenciaInicio" type="date" required></div><div class="field"><label>Fin de vigencia</label><input name="vigenciaFin" type="date"></div>
+    </div><button class="btnx dark" style="margin-top:14px" type="submit">Guardar tarifa</button></form>
+    <div class="tablewrap" style="margin-top:18px"><table class="tablex"><thead><tr><th>Maquinaria</th><th>Tipo</th><th>Precio</th><th>Inicio</th><th>Fin</th></tr></thead><tbody><tr th:each="t:${tarifas}"><td th:text="${t.maquinaria.codigoInterno}">EXC-001</td><td th:text="${t.tipoTarifa}">HORA</td><td th:text="${'S/ ' + #numbers.formatDecimal(t.precio,1,2)}">S/ 0.00</td><td th:text="${t.vigenciaInicio}">2026-01-01</td><td th:text="${t.vigenciaFin ?: 'ABIERTA'}">ABIERTA</td></tr><tr th:if="${#lists.isEmpty(tarifas)}"><td colspan="5" class="empty">No hay tarifas registradas.</td></tr></tbody></table></div>
+  </section>
+</main></div></body></html>

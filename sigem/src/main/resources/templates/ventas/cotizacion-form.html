@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} ?: 'Nueva Cotización'">Formulario Cotización</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { min-height: 100vh; background: #1e293b; color: white; width: 260px; position: fixed; left: 0; top: 0; z-index: 1000; }
+        .sidebar .nav-link { color: #94a3b8; padding: 12px 20px; border-left: 3px solid transparent; transition: all 0.3s; display: flex; align-items: center; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: white; background: #334155; border-left-color: #3b82f6; }
+        .sidebar .nav-link i { margin-right: 12px; font-size: 1.1rem; }
+        .main-content { margin-left: 260px; padding: 2rem; }
+        .form-card { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); overflow: hidden; }
+        .form-label { font-weight: 600; color: #475569; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+        .form-control, .form-select { border-radius: 10px; border: 1px solid #e2e8f0; padding: 0.7rem 1rem; }
+        .table-details th { background-color: #f1f5f9; font-size: 0.75rem; text-transform: uppercase; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{ventas/_nav :: sidebar('cotizaciones')}"></div>
+
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold m-0"><i class="bi bi-file-earmark-plus text-primary me-2"></i><span th:text="${titulo}">Nueva Cotización</span></h2>
+            <small class="text-muted">Complete los detalles de la propuesta comercial.</small>
+        </div>
+        <a th:href="@{/ventas/cotizaciones}" class="btn btn-outline-secondary rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Volver al Listado
+        </a>
+    </div>
+
+    <div class="form-card p-4 p-md-5">
+        <!-- Mensajes de error/éxito -->
+        <div th:if="${error}" class="alert alert-danger mb-4" th:text="${error}"></div>
+        <div th:if="${mensaje}" class="alert alert-success mb-4" th:text="${mensaje}"></div>
+
+        <form th:action="@{/ventas/cotizaciones}" th:object="${cotizacion}" method="post">
+            <input type="hidden" th:if="${modo == 'editar'}" name="cotizacionId" th:value="${cotizacionId}">
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Solicitud Origen *</label>
+                    <select class="form-select" th:field="*{solicitudId}" required>
+                        <option value="" disabled selected>Seleccione una solicitud...</option>
+                        <option th:each="sol : ${solicitudes}" th:value="${sol.id}"
+                                th:text="${'SOL-' + sol.id + ' - ' + sol.cliente?.razonSocial}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Emisión *</label>
+                    <input type="date" class="form-control" th:field="*{fechaEmision}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Vigencia Hasta *</label>
+                    <input type="date" class="form-control" th:field="*{vigencia}" required>
+                </div>
+            </div>
+
+            <!-- DETALLES DE LA COTIZACIÓN -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3"><label class="form-label mb-0">Items Cotizados</label><button type="button" id="btn-agregar-item" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-plus-lg me-1"></i>Agregar ítem</button></div>
+                <select id="tarifa-data" class="d-none"><option th:each="tar : ${todasLasTarifas}" th:value="${tar.id}" th:data-maquina="${tar.maquinaria.id}" th:data-tipo="${tar.tipoTarifa}" th:data-precio="${tar.precio}" th:text="${tar.maquinaria.codigoInterno + ' - ' + tar.tipoTarifa + ' (S/ ' + tar.precio + ')'}"></option></select>
+<div class="table-responsive border rounded-3">
+                    <table class="table table-details mb-0 align-middle" id="tabla-detalles">
+                        <thead>
+                        <tr>
+                            <th class="ps-4 py-3" style="width: 25%">Maquinaria</th>
+                            <th class="py-3" style="width: 25%">Tarifa</th>
+                            <th class="py-3" style="width: 10%">Cant.</th>
+                            <th class="py-3" style="width: 15%">P. Unitario (S/)</th>
+                            <th class="py-3" style="width: 15%">Subtotal (S/)</th>
+                            <th class="py-3 pe-4 text-end" style="width: 10%"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Fila Dinámica Inicial (Índice 0) -->
+                        <tr class="item-row">
+                            <td class="ps-4">
+                                <!-- ✅ SELECT DE MAQUINARIA CON DATA-ID PARA FILTRADO SEGURO -->
+                                <select class="form-select form-select-sm sel-maquinaria"
+                                        name="detalles[0].maquinariaId" required
+                                        onchange="filtrarTarifas(this)">
+                                    <option value="">Seleccione maquinaria...</option>
+                                    <option th:each="maq : ${maquinarias}"
+                                            th:value="${maq.id}"
+                                            th:data-id="${maq.id}"
+                                            th:text="${maq.codigoInterno + ' - ' + maq.marca + ' ' + maq.modelo}">
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <!-- ✅ SELECT DE TARIFAS CON DATA-MAQUINA Y DATA-PRECIO -->
+                                <select class="form-select form-select-sm sel-tarifa"
+                                        name="detalles[0].tarifaId" required disabled>
+                                    <option value="">Primero seleccione máquina</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="form-control form-control-sm qty-input"
+                                       name="detalles[0].cantidad" value="1" min="1" required></td>
+                            <td><input type="number" step="0.01" class="form-control form-control-sm price-input"
+                                       name="detalles[0].precioUnitario" readonly required></td>
+                            <td><input type="text" class="form-control form-control-sm bg-light subtotal-input"
+                                       readonly value="0.00"></td>
+                            <td class="text-end pe-4"><button type="button" class="btn btn-sm btn-outline-danger rounded-circle btn-delete-row"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <small class="text-muted mt-2 d-block">Agregue todas las máquinas necesarias para la cotización.</small>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-8">
+                    <label class="form-label">Observaciones / Condiciones</label>
+                    <textarea class="form-control" th:field="*{observaciones}" rows="3" placeholder="Ej: Condiciones comerciales..."></textarea>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-light p-3 rounded-3 text-end">
+                        <div class="text-muted small mb-1">SUBTOTAL</div>
+                        <div class="h5 fw-bold mb-2" id="lbl-subtotal">S/ 0.00</div>
+                        <div class="text-muted small mb-1">IGV (18%)</div>
+                        <div class="h5 fw-bold mb-2" id="lbl-igv">S/ 0.00</div>
+                        <hr class="my-2">
+                        <div class="text-muted small mb-1">TOTAL</div>
+                        <div class="h3 fw-bold text-primary" id="lbl-total">S/ 0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 pt-3 border-top">
+                <a th:href="@{/ventas/cotizaciones}" class="btn btn-light rounded-pill px-4">Cancelar</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-check-lg me-1"></i> Guardar Cotización
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const tarifas = Array.from(document.querySelectorAll('#tarifa-data option')).map(o => ({id:o.value, maquina:o.dataset.maquina, tipo:o.dataset.tipo, precio:o.dataset.precio, texto:o.textContent}));
+let index = 1;
+function recalcular() {
+ let subtotal=0;
+ document.querySelectorAll('.item-row').forEach(row=>{
+   const q=Number(row.querySelector('.qty-input')?.value||0), p=Number(row.querySelector('.price-input')?.value||0);
+   const sub=q*p; subtotal+=sub; if(row.querySelector('.subtotal-input')) row.querySelector('.subtotal-input').value=sub.toFixed(2);
+ });
+ document.getElementById('lbl-subtotal').textContent='S/ '+subtotal.toFixed(2);
+ document.getElementById('lbl-igv').textContent='S/ '+(subtotal*.18).toFixed(2);
+ document.getElementById('lbl-total').textContent='S/ '+(subtotal*1.18).toFixed(2);
+}
+function actualizarTarifas(row){
+ const maq=row.querySelector('.sel-maquinaria').value, sel=row.querySelector('.sel-tarifa'), price=row.querySelector('.price-input');
+ sel.innerHTML='<option value="">Seleccione tarifa...</option>';
+ tarifas.filter(t=>t.maquina===String(maq)).forEach(t=>{const o=document.createElement('option');o.value=t.id;o.dataset.precio=t.precio;o.textContent=t.tipo+' (S/ '+t.precio+')';sel.appendChild(o)});
+ sel.disabled=tarifas.filter(t=>t.maquina===String(maq)).length===0; price.value=''; recalcular();
+}
+function agregarFila(){
+ const tbody=document.querySelector('#tabla-detalles tbody'), template=tbody.querySelector('.item-row').cloneNode(true), i=index++;
+ template.querySelectorAll('select,input').forEach(el=>{if(el.name) el.name=el.name.replace(/detalles\[\d+\]/,'detalles['+i+']');});
+ template.querySelector('.sel-tarifa').innerHTML='<option value="">Primero seleccione máquina</option>'; template.querySelector('.sel-tarifa').disabled=true;
+ template.querySelector('.price-input').value=''; template.querySelector('.qty-input').value=1; template.querySelector('.subtotal-input').value='0.00';
+ tbody.appendChild(template); recalcular();
+}
+document.addEventListener('change',e=>{
+ if(e.target.classList.contains('sel-maquinaria')) actualizarTarifas(e.target.closest('.item-row'));
+ if(e.target.classList.contains('sel-tarifa')) {const o=e.target.selectedOptions[0]; e.target.closest('.item-row').querySelector('.price-input').value=o?.dataset.precio||''; recalcular();}
+ if(e.target.classList.contains('qty-input')) recalcular();
+});
+document.addEventListener('click',e=>{
+ const btn=e.target.closest('.btn-delete-row'); if(btn){const rows=document.querySelectorAll('.item-row'); if(rows.length>1) btn.closest('tr').remove(); recalcular();}
+});
+document.getElementById('btn-agregar-item')?.addEventListener('click',agregarFila);
+recalcular();
+</script>
+</body>
+</html>

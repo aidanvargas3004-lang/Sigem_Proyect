@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizaciones - SIGEM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { min-height: 100vh; background: #1e293b; color: white; width: 260px; position: fixed; left: 0; top: 0; z-index: 1000; }
+        .sidebar .nav-link { color: #94a3b8; padding: 12px 20px; border-left: 3px solid transparent; transition: all 0.3s; display: flex; align-items: center; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: white; background: #334155; border-left-color: #3b82f6; }
+        .sidebar .nav-link i { margin-right: 12px; font-size: 1.1rem; }
+        .main-content { margin-left: 260px; padding: 2rem; }
+        .kpi-card { border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s; overflow: hidden; }
+        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+        .kpi-icon-bg { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .table-container { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); overflow: hidden; }
+        .table thead th { background-color: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; }
+        .table tbody td { vertical-align: middle; color: #334155; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR VENTAS -->
+<div th:replace="~{ventas/_nav :: sidebar('cotizaciones')}"></div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div class="main-content">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold m-0"><i class="bi bi-file-earmark-text text-primary me-2"></i>Cotizaciones Emitidas</h2>
+            <small class="text-muted">Gestión de propuestas comerciales y seguimiento de aprobación.</small>
+        </div>
+        <a th:href="@{/ventas/cotizaciones/nuevo}" class="btn btn-primary rounded-pill px-3 shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Nueva Cotización
+        </a>
+    </div>
+
+    <!-- MENSAJES FLASH -->
+    <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${mensaje}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- KPIs DINÁMICOS -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Cotizado (Mes)</div>
+                        <div class="h3 fw-bold mb-0 text-dark" th:text="${'S/ ' + #numbers.formatDecimal(totalCotizadoMes != null ? totalCotizadoMes : 0,1,2)}">S/ 450,000.00</div>
+                    </div>
+                    <div class="kpi-icon-bg bg-primary bg-opacity-10 text-primary"><i class="bi bi-currency-dollar"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card kpi-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Tasa de Aceptación</div>
+                        <div class="h3 fw-bold mb-0 text-success" th:text="${tasaAceptacion} ?: '0%'">65%</div>
+                    </div>
+                    <div class="kpi-icon-bg bg-success bg-opacity-10 text-success"><i class="bi bi-graph-up-arrow"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA DE COTIZACIONES -->
+    <div class="table-container">
+        <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-white">
+            <h5 class="mb-0 fw-bold">Listado de Cotizaciones</h5>
+            <div class="input-group w-auto">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-start-0 bg-light" placeholder="Buscar por número o cliente...">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th class="ps-4 py-3">Nro Cotización</th><th class="py-3">Solicitud</th>
+                    <th class="py-3">Cliente</th>
+                    <th class="py-3">Monto Total</th>
+                    <th class="py-3">Fecha Emisión</th>
+                    <th class="py-3">Vigencia</th>
+                    <th class="py-3">Estado</th>
+                    <th class="py-3 pe-4 text-end">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cot : ${cotizaciones}">
+                    <td class="ps-4 text-muted fw-semibold small" th:text="${cot.numero}">COT-2026-150</td>
+                    <td><span class="badge text-bg-light border" th:text="${cot.solicitudId == null ? '-' : 'SOL-' + cot.solicitudId}">SOL-1</span></td>
+                    <td>
+                        <div class="fw-bold text-dark" th:text="${cot.clienteNombre} ?: 'Sin cliente'">Const. Los Andes</div>
+                    </td>
+                    <td class="fw-bold text-dark" th:text="${'S/ ' + #numbers.formatDecimal(cot.total,1,2)}">S/ 12,500.00</td>
+                    <td class="small text-muted" th:text="${#temporals.format(cot.fechaEmision, 'dd-MMM-yyyy')}">26-Ago-2026</td>
+                    <td class="small text-muted" th:text="${#temporals.format(cot.vigencia, 'dd-MMM-yyyy')}">05-Sep-2026</td>
+                    <td>
+                        <span class="badge rounded-pill px-3 py-2 fw-normal"
+                              th:classappend="${cot.estado == 'PENDIENTE'} ? 'bg-warning bg-opacity-10 text-warning border border-warning' :
+                                              (${cot.estado == 'APROBADA'} ? 'bg-success bg-opacity-10 text-success border border-success' :
+                                              (${cot.estado == 'RECHAZADA'} ? 'bg-danger bg-opacity-10 text-danger border border-danger' : 'bg-secondary bg-opacity-10 text-secondary border border-secondary'))"
+                              th:text="${cot.estado}">PENDIENTE</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <span th:if="${cot.estado == 'ENVIADA'}" class="badge text-bg-info me-1">Esperando al cliente</span>
+                        <a th:if="${cot.estado == 'ENVIADA'}"
+                           th:href="@{/ventas/cotizaciones/{id}/rechazar(id=${cot.id})}"
+                           class="btn btn-sm btn-outline-danger rounded-circle" title="Rechazar / cancelar cotización"
+                           onclick="return confirm('¿Marcar esta cotización como rechazada? El cliente verá el cambio.')"><i class="bi bi-x-lg"></i></a>
+                        <a th:if="${cot.estado == 'APROBADA'}"
+                           th:href="@{/ventas/contratos/nuevo(cotizacionId=${cot.id})}"
+                           class="btn btn-sm btn-outline-primary" title="Generar contrato">
+                            <i class="bi bi-file-earmark-check me-1"></i>Generar contrato
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(cotizaciones)}">
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i> No hay cotizaciones registradas.<br>
+                        <a th:href="@{/ventas/cotizaciones/nuevo}" class="btn btn-sm btn-outline-primary mt-2">Crear primera cotización</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

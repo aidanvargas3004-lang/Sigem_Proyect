@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sigem-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sigem_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - sigem_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  sigem_postgres_data:

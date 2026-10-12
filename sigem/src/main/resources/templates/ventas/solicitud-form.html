@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} ?: 'Formulario Solicitud'">Formulario Solicitud</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { min-height: 100vh; background: #1e293b; color: white; width: 260px; position: fixed; left: 0; top: 0; z-index: 1000; }
+        .sidebar .nav-link { color: #94a3b8; padding: 12px 20px; border-left: 3px solid transparent; transition: all 0.3s; display: flex; align-items: center; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: white; background: #334155; border-left-color: #3b82f6; }
+        .sidebar .nav-link i { margin-right: 12px; font-size: 1.1rem; }
+        .main-content { margin-left: 260px; padding: 2rem; }
+        .form-card { background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); overflow: hidden; }
+        .form-label { font-weight: 600; color: #475569; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+        .form-control, .form-select { border-radius: 10px; border: 1px solid #e2e8f0; padding: 0.7rem 1rem; }
+        .form-control:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR VENTAS (Idéntico al listado) -->
+<div th:replace="~{ventas/_nav :: sidebar('solicitudes')}"></div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold m-0"><i class="bi bi-journal-plus text-primary me-2"></i><span th:text="${titulo}">Nueva Solicitud</span></h2>
+            <small class="text-muted">Complete los datos del requerimiento del cliente.</small>
+        </div>
+        <a th:href="@{/ventas/solicitudes}" class="btn btn-outline-secondary rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Volver al Listado
+        </a>
+    </div>
+
+    <!-- FORMULARIO UNIFICADO -->
+    <div class="form-card p-4 p-md-5">
+        <form th:action="@{/ventas/solicitudes}" th:object="${solicitud}" method="post">
+
+            <!-- Campo oculto para ID (solo se envía si estamos editando) -->
+            <input type="hidden" th:if="${modo == 'editar'}" name="solicitudId" th:value="${solicitudId}">
+
+            <div class="row g-4">
+                <!-- CLIENTE -->
+                <div class="col-md-6">
+                    <label class="form-label">Cliente *</label>
+                    <select class="form-select" th:field="*{clienteId}" required autocomplete="off">
+                        <option value="" disabled selected>Seleccione un cliente...</option>
+                        <option th:each="cli : ${clientes}" th:value="${cli.id}" th:text="${cli.razonSocial}">Cliente Ejemplo</option>
+                    </select>
+                    <div class="invalid-feedback">Debe seleccionar un cliente.</div>
+                </div>
+
+                <!-- TIPO DE SOLICITUD -->
+                <div class="col-md-6">
+                    <label class="form-label">Tipo de Solicitud *</label>
+                    <select class="form-select" th:field="*{tipoSolicitud}" required autocomplete="off">
+                        <option value="" disabled selected>Seleccione tipo...</option>
+                        <option value="VENTA">Venta</option>
+                        <option value="ALQUILER">Alquiler</option>
+                        <option value="SERVICIO">Servicio</option>
+                    </select>
+                </div>
+
+                <!-- DESCRIPCIÓN -->
+                <div class="col-12">
+                    <label class="form-label">Descripción / Unidad Requerida *</label>
+                    <textarea class="form-control" th:field="*{descripcion}" rows="4" placeholder="Ej: Volquete 20m3 para proyecto vial en Arequipa..." required autocomplete="off"></textarea>
+                </div>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <div class="d-flex justify-content-end gap-3 mt-5 pt-3 border-top">
+                <a th:href="@{/ventas/solicitudes}" class="btn btn-light rounded-pill px-4">Cancelar</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-check-lg me-1"></i>
+                    <span th:text="${modo == 'editar'} ? 'Actualizar Solicitud' : 'Guardar Solicitud'">Guardar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

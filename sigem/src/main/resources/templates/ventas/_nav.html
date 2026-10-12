@@ -1,0 +1,25 @@
+<th:block th:fragment="sidebar(active)">
+<nav class="sidebar p-3">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+        <div style="color:#60a5fa;font-size:21px;width:34px;text-align:center"><i class="bi bi-box-seam-fill"></i></div>
+        <div>
+            <h4 class="m-0 fw-bold">SIGEM</h4>
+            <small class="text-secondary-emphasis" style="color:#94a3b8!important">Gestión Comercial</small>
+        </div>
+    </div>
+    <ul class="nav flex-column gap-1">
+        <li class="nav-item"><a class="nav-link" th:classappend="${active == 'dashboard'} ? ' active' : ''" th:href="@{/ventas/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${active == 'solicitudes'} ? ' active' : ''" th:href="@{/ventas/solicitudes}"><i class="bi bi-journal-text"></i> Solicitudes</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${active == 'cotizaciones'} ? ' active' : ''" th:href="@{/ventas/cotizaciones}"><i class="bi bi-file-earmark-text"></i> Cotizaciones</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${active == 'contratos'} ? ' active' : ''" th:href="@{/ventas/contratos}"><i class="bi bi-file-earmark-lock"></i> Contratos</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${active == 'alquileres'} ? ' active' : ''" th:href="@{/ventas/alquileres}"><i class="bi bi-calendar-check"></i> Alquileres</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${active == 'ventas'} ? ' active' : ''" th:href="@{/ventas/ventas}"><i class="bi bi-truck"></i> Ventas de maquinaria</a></li>
+        <li class="nav-item"><a class="nav-link" th:classappend="${active == 'reportes'} ? ' active' : ''" th:href="@{/ventas/reportes}"><i class="bi bi-bar-chart-line"></i> Reportes</a></li>
+    </ul>
+    <form th:action="@{/logout}" method="post" class="mt-3 px-2">
+        <button type="submit" class="btn btn-outline-light w-100 text-start">
+            <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+        </button>
+    </form>
+</nav>
+</th:block>

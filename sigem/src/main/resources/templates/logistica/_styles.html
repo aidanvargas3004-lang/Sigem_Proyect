@@ -1,0 +1,21 @@
+<th:block th:fragment="styles">
+<style>
+    body{background:#f8fafc;font-family:'Segoe UI',system-ui,sans-serif}
+    .sidebar{min-height:100vh;background:#1e293b;color:#fff;width:260px;position:fixed;left:0;top:0;z-index:1000}
+    .sidebar .nav-link{color:#94a3b8;padding:11px 18px;border-left:3px solid transparent;display:flex;align-items:center;gap:10px}
+    .sidebar .nav-link:hover,.sidebar .nav-link.active{color:#fff;background:#334155;border-left-color:#3b82f6}
+    .sidebar .nav-link i{width:22px}
+    .main{margin-left:260px;padding:30px}
+    .card{border:0;border-radius:14px;box-shadow:0 3px 12px rgba(15,23,42,.05)}
+    .kpi{min-height:116px}
+    .icon{width:45px;height:45px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+    .table thead th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#64748b;background:#f8fafc;white-space:nowrap}
+    .table td{vertical-align:middle}
+    .badge-status{border:1px solid}
+    .btn-action{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+    .muted-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px}
+    .form-card{max-width:1100px}
+    @media(max-width:900px){.sidebar{width:210px}.main{margin-left:210px;padding:20px}}
+</style>
+
+</th:block>

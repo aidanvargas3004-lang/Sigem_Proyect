@@ -1,0 +1,18 @@
+<th:block th:fragment="sidebar(active)">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-title"><i class="bi bi-shield-lock-fill me-2"></i>ADMINISTRACIÓN</div>
+    <small>SIGEM · Seguridad y acceso</small>
+  </div>
+  <nav class="navx">
+    <a th:classappend="${active == 'dashboard'} ? ' active' : ''" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i>Dashboard</a>
+    <a th:classappend="${active == 'usuarios'} ? ' active' : ''" th:href="@{/seguridad/usuarios}"><i class="bi bi-people"></i>Usuarios</a>
+    <a th:classappend="${active == 'roles'} ? ' active' : ''" th:href="@{/seguridad/roles}"><i class="bi bi-shield-check"></i>Roles</a>
+    <a th:href="@{/gerencia/dashboard}"><i class="bi bi-bar-chart-line"></i>Vista gerencial</a>
+  </nav>
+  <div class="nav-footer">
+    <div class="userbox"><i class="bi bi-person-circle"></i><div><strong th:text="${#authentication.name}">admin</strong><small>Administrador</small></div></div>
+    <form th:action="@{/logout}" method="post"><button class="logout-btn" type="submit"><i class="bi bi-box-arrow-right"></i>Cerrar sesión</button></form>
+  </div>
+</aside>
+</th:block>
