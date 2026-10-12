@@ -70,7 +70,7 @@ DB_URL=jdbc:postgresql://localhost:5432/sigem_db DB_PASSWORD=su_clave ./mvnw tes
 
 | Área | Rutas | Funcionalidad principal |
 |---|---|---|
-| Administración | `/dashboard`, `/seguridad/*` | Usuarios, roles, **bitácora de auditoría** con filtros y exportación (RF018) |
+| Administración | `/dashboard`, `/seguridad/*` | Usuarios, roles, **bitácora de auditoría** con filtros y exportación (RF018), **respaldos y configuración de la BD** (`/seguridad/respaldos`) |
 | Marketing | `/marketing/*` | Clientes, campañas, leads, oportunidades, reporte Excel/PDF |
 | Ventas / Comercial | `/ventas/*` | Solicitudes, cotizaciones, contratos, ventas, alquileres, reporte de ventas |
 | Operaciones / Producción | `/operaciones/*` | Servicios, programación, maquinaria y tarifas, operadores, **asignación con validación de conflictos** (RF009), **ejecución con horómetro/km** (RF010), checklist e incidencias, **mantenimiento y planes preventivos** (RF012-RF013), **GPS** |
@@ -113,7 +113,15 @@ Cada módulo sigue la misma organización: `entity` (modelo JPA), `repository` (
 - [docs/SEGURIDAD.md](docs/SEGURIDAD.md) — controles de seguridad implementados y consideraciones por área.
 - [docs/evidencias/](docs/evidencias/) — capturas de cada pantalla por rol, tomadas con la aplicación en ejecución sobre PostgreSQL.
 
-## 5. Producción
+## 5. Respaldos de la base de datos
+
+- **Automático:** cada día a las 02:00 (`BACKUP_CRON`) se genera `backups/sigem_db_AAAAMMDD_HHMMSS.sql`; se conservan los últimos 15 (`BACKUP_RETENER`).
+- **A pedido:** Administración → *Respaldos y BD* → *Generar respaldo ahora*; desde ahí también se descarga cada archivo.
+- **Herramienta:** usa `pg_dump` (lo busca en el PATH y en `C:\Program Files\PostgreSQL\<versión>\bin`, o en `PG_DUMP`); si no lo encuentra, exporta los datos por JDBC.
+- **Por consola (Windows):** `.\scripts\respaldar.ps1` y `.\scripts\restaurar.ps1 -Archivo backups\sigem_db_....sql`.
+- Cada respaldo queda registrado en la bitácora de auditoría (acción `RESPALDO`).
+
+## 6. Producción
 
 - Cambiar `JPA_DDL_AUTO=validate` y versionar el esquema (Flyway/Liquibase).
 - Definir `JWT_SECRET`, `DB_PASSWORD` y las credenciales de Cloudinary como secretos del servidor, nunca en el repositorio.

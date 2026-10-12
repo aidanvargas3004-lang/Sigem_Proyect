@@ -43,5 +43,5 @@ Pruebas que lo respaldan: `SeguridadIntegracionTest` (redirección al login, 401
 2. `JPA_DDL_AUTO=validate` y migraciones versionadas (Flyway).
 3. Bloqueo temporal de la cuenta tras varios `LOGIN_FALLIDO` consecutivos.
 4. Política de contraseñas (longitud y complejidad) en el registro y cambio de clave.
-5. Copias de seguridad automáticas de PostgreSQL (`pg_dump` diario) y prueba de restauración.
+5. Copiar la carpeta `backups/` (respaldo diario automático ya implementado) a un almacenamiento externo y probar la restauración periódicamente.
 6. Retención y archivado de la bitácora de auditoría.
