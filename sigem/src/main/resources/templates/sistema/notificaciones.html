@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Notificaciones | SIGEM</title>
+<th:block th:replace="~{rrhh/_styles :: styles}"></th:block>
+<style>.main.solo{margin:0 auto;width:100%;max-width:1100px}.leida{opacity:.62}.msg{color:#334155}.linkbtn{border:0;background:none;color:#2563eb;font-weight:600;padding:0}</style>
+</head>
+<body>
+<main class="main solo">
+  <div class="top">
+    <div class="title">
+      <h1><i class="bi bi-bell"></i> Notificaciones</h1>
+      <p>Alertas automáticas de SIGEM para <strong th:text="${usuario.nombres + ' ' + usuario.apellidos}">usuario</strong>
+        (<span th:text="${usuario.rol.nombre}">ROL</span>): vencimientos, stock mínimo, mantenimiento preventivo, contratos y servicios.</p>
+    </div>
+    <div class="toolbar" style="margin:0">
+      <a class="btnx" th:href="@{/inicio}"><i class="bi bi-arrow-left"></i> Volver a mi panel</a>
+      <form th:action="@{/notificaciones/leer-todas}" method="post"><button class="btnx" type="submit"><i class="bi bi-check2-all"></i> Marcar todas como leídas</button></form>
+      <form th:if="${esAdmin}" th:action="@{/notificaciones/generar}" method="post"><button class="btnx blue" type="submit"><i class="bi bi-arrow-repeat"></i> Revisar alertas ahora</button></form>
+    </div>
+  </div>
+  <div th:if="${ok}" class="notice ok" th:text="${ok}"></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Fecha</th><th>Alerta</th><th>Detalle</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+        <tr th:each="n : ${notificaciones}" th:classappend="${n.leida} ? 'leida' : ''">
+          <td class="small-muted" th:text="${#temporals.format(n.fecha,'dd/MM/yyyy HH:mm')}">01/01/2026 08:00</td>
+          <td><span class="badgex" th:classappend="${n.tipo == 'ERROR'} ? ' red' : (${n.tipo == 'WARNING'} ? ' orange' : (${n.tipo == 'SUCCESS'} ? ' green' : ' blue'))" th:text="${n.titulo}">Título</span></td>
+          <td class="msg" th:text="${n.mensaje}">Mensaje</td>
+          <td><span class="badgex" th:classappend="${n.leida} ? ' green' : ' orange'" th:text="${n.leida} ? 'Leída' : 'Pendiente'">Pendiente</span></td>
+          <td>
+            <form th:if="${!n.leida}" th:action="@{/notificaciones/{id}/leer(id=${n.id})}" method="post">
+              <button class="linkbtn" type="submit" th:text="${n.enlace != null} ? 'Atender' : 'Marcar leída'">Atender</button>
+            </form>
+            <a th:if="${n.leida and n.enlace != null}" th:href="@{${n.enlace}}" class="small-muted">Ver</a>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(notificaciones)}"><td colspan="5" class="empty">No tienes notificaciones.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

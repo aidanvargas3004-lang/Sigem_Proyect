@@ -7,7 +7,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <th:block th:replace="~{seguridad/_styles :: styles}"></th:block>
 </head>
-<body>
+<body><th:block th:replace="~{fragments/campana :: campana}"></th:block>
 <div class="layout">
   <div th:replace="~{seguridad/_nav :: sidebar('roles')}"></div>
   <main class="main">

@@ -4,4 +4,5 @@
 <a th:classappend="${active == 'rentabilidad'} ? ' active' : ''" th:href="@{/gerencia/rentabilidad}"><i class="bi bi-cash-coin"></i>Rentabilidad</a>
 <a th:classappend="${active == 'operaciones'} ? ' active' : ''" th:href="@{/gerencia/operaciones}"><i class="bi bi-truck"></i>Operaciones</a>
 <a th:classappend="${active == 'reportes'} ? ' active' : ''" th:href="@{/gerencia/reportes}"><i class="bi bi-file-earmark-bar-graph"></i>Reportes ejecutivos</a>
+<a th:href="@{/reportes}"><i class="bi bi-table"></i>Reportes operativos</a>
 </nav><div class="nav-footer"><div class="userbox"><i class="bi bi-person-circle"></i><div><strong th:text="${#authentication.name}">gerente</strong><small>Gerencia General</small></div></div><form th:action="@{/logout}" method="post"><button class="logout-btn" type="submit"><i class="bi bi-box-arrow-right"></i>Cerrar sesión</button></form></div></aside></th:block>

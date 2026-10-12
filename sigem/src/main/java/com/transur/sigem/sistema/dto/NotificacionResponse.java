@@ -17,4 +17,5 @@ public class NotificacionResponse {
     private String tipo;       // INFO, WARNING, ERROR, SUCCESS
     private Boolean leida;
     private LocalDateTime fecha;
+    private String enlace;
 }

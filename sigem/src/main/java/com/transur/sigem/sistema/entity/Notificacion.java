@@ -42,7 +42,7 @@ public class Notificacion {
 
     /** Enlace interno a la pantalla relacionada. */
     @Column(length = 200)
-    private String enlace; // Controla si ya fue vista por el usuario
+    private String enlace;
 
     @Column(nullable = false)
     private LocalDateTime fecha = LocalDateTime.now();

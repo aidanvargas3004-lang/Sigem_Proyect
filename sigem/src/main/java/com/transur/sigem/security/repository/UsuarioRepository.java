@@ -16,6 +16,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByEmail(String email);
     List<Usuario> findByEstadoTrue();
 
+    @Query("SELECT u FROM Usuario u JOIN FETCH u.rol r WHERE u.estado = true AND r.nombre IN :roles")
+    List<Usuario> findActivosPorRoles(@Param("roles") java.util.Collection<String> roles);
+
     // ✅ ESTE ES EL MÉTODO QUE FALTA O NO SE RECONOCE
     @Query("SELECT u FROM Usuario u WHERE u.cliente.id = :clienteId")
     Optional<Usuario> findByClienteId(@Param("clienteId") Long clienteId);

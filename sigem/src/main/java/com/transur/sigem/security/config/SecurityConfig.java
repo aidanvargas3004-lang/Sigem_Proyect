@@ -30,14 +30,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                // CSRF activo para las vistas (Thymeleaf agrega el token en cada th:action);
+                // la API REST usa JWT sin estado, por eso se excluye.
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/auth/**"))
+                .headers(h -> h
+                        .frameOptions(f -> f.sameOrigin())
+                        .contentTypeOptions(c -> {})
+                        .referrerPolicy(r -> r.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
                 // Las vistas usan sesión; los endpoints REST siguen pudiendo trabajar con JWT.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/inicio-publico", "/catalogo").permitAll()
                         .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/webjars/**", "/error", "/acceso-denegado").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         // API protegida por sesión o JWT y segmentada por área.
-                        .requestMatchers("/api/maquinaria/**", "/api/servicios/**", "/api/asignaciones/**", "/api/incidencias/**", "/api/mantenimientos/**").hasAnyRole("OPERACIONES", "ADMIN")
+                        .requestMatchers("/api/maquinaria/**", "/api/servicios/**", "/api/asignaciones/**", "/api/incidencias/**", "/api/mantenimientos/**", "/api/gps/**").hasAnyRole("OPERACIONES", "ADMIN")
                         .requestMatchers("/api/activos/**").hasAnyRole("OPERACIONES", "LOGISTICA", "ADMIN")
                         .requestMatchers("/api/clientes/**").hasAnyRole("MARKETING", "VENTAS", "ADMIN")
                         .requestMatchers("/api/solicitudes/**", "/api/cotizaciones/**", "/api/contratos/**").hasAnyRole("CLIENTE", "VENTAS", "ADMIN")
@@ -55,12 +62,24 @@ public class SecurityConfig {
                         .requestMatchers("/rrhh/**").hasAnyRole("RRHH", "ADMIN")
                         .requestMatchers("/logistica/**").hasAnyRole("LOGISTICA", "ADMIN")
                         .requestMatchers("/operaciones/**", "/maquinaria/**", "/mantenimiento/**").hasAnyRole("OPERACIONES", "ADMIN")
+                        .requestMatchers("/reportes/**").hasAnyRole("OPERACIONES", "GERENCIA", "ADMIN")
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").hasRole("ADMIN")
                         .requestMatchers("/seguridad/**").hasRole("ADMIN")
                         .requestMatchers("/dashboard").hasRole("ADMIN")
-                        .requestMatchers("/inicio").authenticated()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/inicio", "/notificaciones/**").authenticated()
+                        // Todo lo no declarado exige sesión (antes era permitAll).
+                        .anyRequest().authenticated()
                 )
-                .exceptionHandling(ex -> ex.accessDeniedPage("/acceso-denegado"))
+                .exceptionHandling(ex -> ex
+                        .accessDeniedPage("/acceso-denegado")
+                        // La API responde 401; las vistas redirigen al formulario de login.
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            if (request.getRequestURI().startsWith(request.getContextPath() + "/api/")) {
+                                response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                            } else {
+                                response.sendRedirect(request.getContextPath() + "/login");
+                            }
+                        }))
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
@@ -72,6 +91,7 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout=true")
                         .invalidateHttpSession(true)
+                        .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 )

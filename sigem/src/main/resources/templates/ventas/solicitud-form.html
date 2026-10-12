@@ -19,7 +19,7 @@
         .form-control:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
     </style>
 </head>
-<body>
+<body><th:block th:replace="~{fragments/campana :: campana}"></th:block>
 
 <!-- SIDEBAR VENTAS (Idéntico al listado) -->
 <div th:replace="~{ventas/_nav :: sidebar('solicitudes')}"></div>

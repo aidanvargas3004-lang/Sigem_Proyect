@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquinaria y tarifas - SIGEM</title><th:block th:replace="~{operaciones/_styles :: styles}"></th:block></head>
-<body><div class="layout"><div th:replace="~{operaciones/_nav :: sidebar('maquinaria')}"></div>
+<body><th:block th:replace="~{fragments/campana :: campana}"></th:block><div class="layout"><div th:replace="~{operaciones/_nav :: sidebar('maquinaria')}"></div>
 <main class="main">
   <div th:if="${mensaje}" class="notice ok" th:text="${mensaje}"></div>
   <div th:if="${error}" class="notice err" th:text="${error}"></div>
