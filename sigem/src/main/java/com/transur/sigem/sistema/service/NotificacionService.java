@@ -1,20 +1,15 @@
 package com.transur.sigem.sistema.service;
 
-import com.transur.sigem.rrhh.entity.DocumentoEmpleado;
-import com.transur.sigem.rrhh.repository.DocumentoEmpleadoRepository;
-import com.transur.sigem.logistica.entity.Repuesto;
-import com.transur.sigem.logistica.repository.RepuestoRepository;
+import com.transur.sigem.common.exception.RecursoNoEncontradoException;
 import com.transur.sigem.security.entity.Usuario;
 import com.transur.sigem.security.repository.UsuarioRepository;
 import com.transur.sigem.sistema.dto.NotificacionResponse;
 import com.transur.sigem.sistema.entity.Notificacion;
 import com.transur.sigem.sistema.repository.NotificacionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,54 +20,44 @@ import java.util.stream.Collectors;
 public class NotificacionService {
 
     private final NotificacionRepository notifRepository;
-    private final DocumentoEmpleadoRepository docEmpleadoRepo;
-    private final RepuestoRepository repuestoRepo;
     private final UsuarioRepository usuarioRepository; // ✅ Inyectado para asignar usuarios
 
-    // ✅ ALERTAS AUTOMÁTICAS DIARIAS (8:00 AM)
-    @Scheduled(cron = "0 0 8 * * ?")
+    /**
+     * Registra una alerta automática para un usuario, salvo que ya exista una con la misma clave.
+     * Las reglas que deciden qué alertar viven en {@link AlertaService} (SRP).
+     */
     @Transactional
-    public void generarAlertasAutomaticas() {
-        LocalDate hoy = LocalDate.now();
-        LocalDate en30Dias = hoy.plusDays(30);
-
-        // 1. Alerta por documentos próximos a vencer (RRHH)
-        List<DocumentoEmpleado> docsVenciendo = docEmpleadoRepo
-                .findByFechaVencimientoBetweenAndEstadoTrue(hoy, en30Dias);
-
-        for (DocumentoEmpleado doc : docsVenciendo) {
-            Long userId = null;
-            if (doc.getEmpleado() != null && doc.getEmpleado().getUsuario() != null) {
-                userId = doc.getEmpleado().getUsuario().getId();
-            }
-
-            crearNotificacion(
-                    userId,
-                    "VENCIMIENTO DE DOCUMENTO",
-                    "La licencia/certificado " + doc.getTipoDocumento() + " de " +
-                            doc.getEmpleado().getNombres() + " vence el " + doc.getFechaVencimiento(),
-                    "WARNING"
-            );
+    public boolean notificar(Usuario usuario, String titulo, String mensaje, String tipo, String clave, String enlace) {
+        if (clave != null && notifRepository.existsByUsuarioIdAndClave(usuario.getId(), clave)) {
+            return false;
         }
+        Notificacion n = new Notificacion();
+        n.setUsuario(usuario);
+        n.setTitulo(titulo);
+        n.setMensaje(mensaje);
+        n.setTipo(tipo);
+        n.setClave(clave);
+        n.setEnlace(enlace);
+        n.setLeida(false);
+        n.setFecha(LocalDateTime.now());
+        notifRepository.save(n);
+        return true;
+    }
 
-        // 2. Alerta por stock mínimo alcanzado (Logística)
-        List<Repuesto> stockBajo = repuestoRepo.findAll().stream()
-                .filter(r -> r.getStockActual() <= r.getStockMinimo() && r.getStockMinimo() > 0)
+    public List<NotificacionResponse> listarRecientes(Long usuarioId) {
+        return notifRepository.findTop100ByUsuarioIdOrderByFechaDesc(usuarioId).stream()
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
 
-        for (Repuesto rep : stockBajo) {
-            // Notificar a todos los usuarios activos (o filtra por rol si prefieres)
-            List<Usuario> usuarios = usuarioRepository.findByEstadoTrue();
-            for (Usuario u : usuarios) {
-                crearNotificacion(
-                        u.getId(),
-                        "STOCK MÍNIMO ALCANZADO",
-                        "El repuesto " + rep.getCodigo() + " (" + rep.getNombre() +
-                                ") tiene solo " + rep.getStockActual() + " unidades disponibles.",
-                        "ERROR"
-                );
-            }
-        }
+    /** Marca como leída solo si la notificación pertenece al usuario; devuelve su enlace. */
+    @Transactional
+    public String marcarLeidaDeUsuario(Long notificacionId, Long usuarioId) {
+        Notificacion n = notifRepository.findById(notificacionId)
+                .filter(x -> x.getUsuario() != null && x.getUsuario().getId().equals(usuarioId))
+                .orElseThrow(() -> new RecursoNoEncontradoException("Notificación", notificacionId));
+        n.setLeida(true);
+        return n.getEnlace();
     }
 
     // ✅ CORREGIDO: Ahora devuelve DTO directamente
@@ -100,10 +85,6 @@ public class NotificacionService {
         return notifRepository.save(n);
     }
 
-    private void crearNotificacionGlobal(String titulo, String mensaje, String tipo) {
-        crearNotificacion(null, titulo, mensaje, tipo);
-    }
-
     public List<NotificacionResponse> listarNoLeidas(Long usuarioId) {
         return notifRepository.findByUsuarioIdAndLeidaFalseOrderByFechaDesc(usuarioId).stream()
                 .map(this::mapToResponse) // ✅ Usar mapper unificado
@@ -113,7 +94,7 @@ public class NotificacionService {
     @Transactional
     public void marcarComoLeida(Long notificacionId) {
         Notificacion n = notifRepository.findById(notificacionId)
-                .orElseThrow(() -> new RuntimeException("Notificación no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Notificación", notificacionId));
         n.setLeida(true);
         notifRepository.save(n);
     }
@@ -138,6 +119,7 @@ public class NotificacionService {
                 .tipo(n.getTipo())
                 .leida(n.getLeida())
                 .fecha(n.getFecha())
+                .enlace(n.getEnlace())
                 .build();
     }
 }

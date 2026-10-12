@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reportes operativos - SIGEM</title>
+  <th:block th:replace="~{operaciones/_styles :: styles}"></th:block>
+  <style>
+    .filtros{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+    .filtros label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#334155}
+    .filtros select,.filtros input{border:1px solid #cbd5e1;border-radius:8px;padding:9px 10px;background:#fff;min-width:150px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tablex td:first-child{white-space:nowrap}
+  </style>
+</head>
+<body><th:block th:replace="~{fragments/campana :: campana}"></th:block>
+<div class="layout">
+  <div th:replace="~{operaciones/_nav :: sidebar('reportes')}"></div>
+  <main class="main">
+    <div class="top">
+      <div class="title"><div class="section-kicker">Producción · RF016 / RF017</div><h1>Reportes operativos</h1>
+        <p>Servicios realizados, uso de flota, mantenimientos, incidencias y disponibilidad, con exportación a Excel y PDF.</p></div>
+      <div class="two-actions" th:if="${tabla != null}">
+        <a class="btnx" th:href="@{/reportes/exportar/excel(tipo=${tipo},desde=${desde},hasta=${hasta})}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        <a class="btnx dark" th:href="@{/reportes/exportar/pdf(tipo=${tipo},desde=${desde},hasta=${hasta})}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+      </div>
+    </div>
+    <div th:if="${error}" class="notice err" th:text="${error}"></div>
+
+    <form class="filtros" method="get" th:action="@{/reportes}">
+      <input type="hidden" name="tipo" th:value="${tipo}">
+      <div><label>Desde</label><input type="date" name="desde" th:value="${desde}" required></div>
+      <div><label>Hasta</label><input type="date" name="hasta" th:value="${hasta}" required></div>
+      <button class="btnx dark" type="submit"><i class="bi bi-funnel"></i> Aplicar período</button>
+    </form>
+
+    <div class="cards" th:if="${kpi != null}">
+      <div class="card metric"><small>SERVICIOS (FINALIZADOS)</small><strong th:text="${kpi.servicios + ' (' + kpi.finalizados + ')'}">0</strong></div>
+      <div class="card metric"><small>HORAS / KM DE USO</small><strong th:text="${#numbers.formatDecimal(kpi.horas,1,'COMMA',1,'POINT') + ' h · ' + #numbers.formatDecimal(kpi.km,1,'COMMA',0,'POINT') + ' km'}">0</strong></div>
+      <div class="card metric"><small>COSTO MANTENIMIENTO</small><strong th:text="${'S/ ' + #numbers.formatDecimal(kpi.costo_mantenimiento,1,'COMMA',2,'POINT')}">0</strong></div>
+      <div class="card metric"><small>DISPONIBILIDAD / INCIDENCIAS</small><strong th:text="${(kpi.disponibilidad != null ? kpi.disponibilidad : 0) + '% · ' + kpi.incidencias}">0</strong></div>
+    </div>
+
+    <div class="tabs">
+      <a th:each="t : ${tipos}" class="btnx" th:classappend="${t.key == tipo} ? ' dark'"
+         th:href="@{/reportes(tipo=${t.key},desde=${desde},hasta=${hasta})}" th:text="${t.value}">Tipo</a>
+    </div>
+
+    <div class="tablewrap" th:if="${tabla != null}">
+      <div style="padding:14px 16px 0"><strong th:text="${tabla.titulo}">Título</strong>
+        <span class="muted" th:text="${' · ' + tabla.subtitulo + ' · ' + #lists.size(tabla.filas) + ' registro(s)'}"></span></div>
+      <table class="tablex">
+        <thead><tr><th th:each="c : ${tabla.columnas}" th:text="${c}">Col</th></tr></thead>
+        <tbody>
+          <tr th:each="f : ${tabla.filas}">
+            <td th:each="v : ${f}" th:text="${v}">v</td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(tabla.filas)}"><td th:colspan="${#lists.size(tabla.columnas)}" class="empty">Sin registros en el período seleccionado.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</body>
+</html>

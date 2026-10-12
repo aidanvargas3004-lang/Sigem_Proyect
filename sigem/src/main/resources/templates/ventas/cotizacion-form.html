@@ -19,7 +19,7 @@
         .table-details th { background-color: #f1f5f9; font-size: 0.75rem; text-transform: uppercase; color: #64748b; }
     </style>
 </head>
-<body>
+<body><th:block th:replace="~{fragments/campana :: campana}"></th:block>
 
 <div th:replace="~{ventas/_nav :: sidebar('cotizaciones')}"></div>
 

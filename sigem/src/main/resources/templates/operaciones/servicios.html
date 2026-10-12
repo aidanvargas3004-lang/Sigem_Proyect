@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Servicios - SIGEM</title><th:block th:replace="~{operaciones/_styles :: styles}"></th:block></head>
-<body><div class="layout"><div th:replace="~{operaciones/_nav :: sidebar('servicios')}"></div><main class="main">
+<body><th:block th:replace="~{fragments/campana :: campana}"></th:block><div class="layout"><div th:replace="~{operaciones/_nav :: sidebar('servicios')}"></div><main class="main">
   <div class="top"><div class="title"><div class="section-kicker">Producción</div><h1>Gestión de servicios</h1><p>Catálogo de servicios, imágenes y ejecución operativa.</p></div><a class="btnx dark" th:href="@{/operaciones/servicios/nuevo}">+ Nuevo servicio</a></div>
   <div th:if="${mensaje}" class="notice ok" th:text="${mensaje}"></div><div th:if="${error}" class="notice err" th:text="${error}"></div>
   <div class="module-grid"><a class="module-link" href="#catalogo"><i class="bi bi-images"></i><strong>Tipos de servicio</strong><span>Nombre, descripción e imagen pública.</span></a><a class="module-link" href="#ejecucion"><i class="bi bi-clipboard-check"></i><strong>Servicios ejecutados</strong><span>Contratos, clientes, fechas y estados.</span></a><a class="module-link" th:href="@{/operaciones/asignaciones}"><i class="bi bi-person-workspace"></i><strong>Asignaciones</strong><span>Maquinaria y operadores.</span></a></div>

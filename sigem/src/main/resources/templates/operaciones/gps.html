@@ -6,7 +6,7 @@
   <th:block th:replace="~{operaciones/_styles :: styles}"></th:block>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 </head>
-<body>
+<body><th:block th:replace="~{fragments/campana :: campana}"></th:block>
 <div class="layout">
   <div th:replace="~{operaciones/_nav :: sidebar('gps')}"></div>
   <main class="main">
@@ -49,13 +49,22 @@
 <script th:inline="javascript">
   const marcadores = /*[[${marcadores}]]*/ [];
   const recorrido = /*[[${recorrido}]]*/ null;
-  const mapa = L.map('mapa').setView([-16.40, -71.53], 11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'}).addTo(mapa);
-  const puntos = [];
-  marcadores.forEach(m => { L.marker([m.lat, m.lon]).addTo(mapa).bindPopup('<b>' + m.codigo + '</b><br>' + m.estado + '<br>' + m.ref); puntos.push([m.lat, m.lon]); });
-  if (recorrido && recorrido.length) { L.polyline(recorrido, {color: '#3b82f6', weight: 5}).addTo(mapa); mapa.fitBounds(recorrido, {padding: [30, 30]}); }
-  else if (puntos.length > 1) { mapa.fitBounds(puntos, {padding: [30, 30]}); }
-  mapa.on('click', e => { document.getElementById('lat').value = e.latlng.lat.toFixed(6); document.getElementById('lon').value = e.latlng.lng.toFixed(6); });
+  // Escapa el texto ingresado por usuarios antes de insertarlo en el popup (evita XSS).
+  const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if (window.L) {
+    const mapa = L.map('mapa').setView([-16.40, -71.53], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'}).addTo(mapa);
+    const puntos = [];
+    marcadores.forEach(m => { L.marker([m.lat, m.lon]).addTo(mapa).bindPopup('<b>' + esc(m.codigo) + '</b><br>' + esc(m.estado) + '<br>' + esc(m.ref)); puntos.push([m.lat, m.lon]); });
+    if (recorrido && recorrido.length) { L.polyline(recorrido, {color: '#3b82f6', weight: 5}).addTo(mapa); mapa.fitBounds(recorrido, {padding: [30, 30]}); }
+    else if (puntos.length > 1) { mapa.fitBounds(puntos, {padding: [30, 30]}); }
+    else if (puntos.length === 1) { mapa.setView(puntos[0], 14); }
+    mapa.on('click', e => { document.getElementById('lat').value = e.latlng.lat.toFixed(6); document.getElementById('lon').value = e.latlng.lng.toFixed(6); });
+  } else {
+    document.getElementById('mapa').innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
+      + '<i class="bi bi-wifi-off" style="font-size:28px"></i><br>No se pudo cargar el mapa (sin conexión al servicio de mapas).<br>'
+      + 'Las últimas posiciones se muestran en la tabla y se pueden registrar coordenadas manualmente.</div>';
+  }
 </script>
 </body>
 </html>
