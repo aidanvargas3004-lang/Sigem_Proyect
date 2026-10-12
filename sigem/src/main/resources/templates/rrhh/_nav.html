@@ -1,0 +1,16 @@
+<th:block th:fragment="sidebar(active)">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-title">RECURSOS HUMANOS</div><small>SIGEM · Transur</small></div>
+  <nav class="navx">
+    <a th:classappend="${active == 'dashboard'} ? ' active' : ''" th:href="@{/rrhh/dashboard}"><i class="bi bi-speedometer2"></i>Dashboard</a>
+    <a th:classappend="${active == 'empleados'} ? ' active' : ''" th:href="@{/rrhh/empleados}"><i class="bi bi-people"></i>Empleados / Personal</a>
+    <a th:classappend="${active == 'documentacion'} ? ' active' : ''" th:href="@{/rrhh/documentacion}"><i class="bi bi-folder2-open"></i>Documentación</a>
+    <a th:classappend="${active == 'vencimientos'} ? ' active' : ''" th:href="@{/rrhh/vencimientos}"><i class="bi bi-calendar2-week"></i>Vencimientos</a>
+    <a th:classappend="${active == 'alertas'} ? ' active' : ''" th:href="@{/rrhh/alertas}"><i class="bi bi-bell"></i>Alertas</a>
+  
+    <form th:action="@{/logout}" method="post" style="margin:12px 8px 0;">
+      <button type="submit" class="logout-nav-btn"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
+    </form>
+</nav>
+</aside>
+</th:block>

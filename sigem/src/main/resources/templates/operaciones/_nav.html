@@ -1,0 +1,21 @@
+<th:block th:fragment="sidebar(active)">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon"><i class="bi bi-box-seam-fill"></i></div>
+    <div class="brand-text">SIGEM<small>Producción y Operaciones</small></div>
+  </div>
+  <nav class="navx">
+    <a th:classappend="${active == 'dashboard'} ? ' active' : ''" th:href="@{/operaciones/dashboard}"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
+    <a th:classappend="${active == 'servicios'} ? ' active' : ''" th:href="@{/operaciones/servicios}"><i class="bi bi-clipboard-check"></i><span>Servicios</span></a>
+    <a th:classappend="${active == 'programacion'} ? ' active' : ''" th:href="@{/operaciones/programacion}"><i class="bi bi-calendar3"></i><span>Programación</span></a>
+    <a th:classappend="${active == 'maquinaria'} ? ' active' : ''" th:href="@{/operaciones/maquinaria}"><i class="bi bi-truck"></i><span>Maquinaria</span></a>
+    <a th:classappend="${active == 'conductores'} ? ' active' : ''" th:href="@{/operaciones/conductores}"><i class="bi bi-person-badge"></i><span>Conductores / Operadores</span></a>
+    <a th:classappend="${active == 'asignaciones'} ? ' active' : ''" th:href="@{/operaciones/asignaciones}"><i class="bi bi-arrow-left-right"></i><span>Asignaciones</span></a>
+    <a th:classappend="${active == 'checklist'} ? ' active' : ''" th:href="@{/operaciones/checklist}"><i class="bi bi-check2-square"></i><span>Checklist e incidencias</span></a>
+  
+    <form th:action="@{/logout}" method="post" style="margin:12px 8px 0;">
+      <button type="submit" class="logout-nav-btn"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
+    </form>
+</nav>
+</aside>
+</th:block>

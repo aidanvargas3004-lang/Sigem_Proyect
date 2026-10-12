@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${isEdit} ? 'Editar Lead - SIGEM' : 'Nuevo Lead - SIGEM'">Lead - SIGEM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { min-height: 100vh; background: #1e293b; color: white; width: 260px; position: fixed; left: 0; top: 0; z-index: 1000; }
+        .sidebar .nav-link { color: #94a3b8; padding: 12px 20px; border-left: 3px solid transparent; transition: all 0.3s; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: white; background: #334155; border-left-color: #3b82f6; }
+        .main-content { margin-left: 260px; padding: 2rem; }
+        .form-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 2rem; max-width: 800px; }
+    </style>
+</head>
+<body>
+<nav class="sidebar p-3">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+        <i class="bi bi-box-seam-fill fs-3 text-primary"></i>
+        <h4 class="m-0 fw-bold">SIGEM</h4>
+    </div>
+    <ul class="nav flex-column gap-1">
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/campanias}"><i class="bi bi-megaphone"></i> Campañas</a></li>
+        <li class="nav-item"><a class="nav-link active" th:href="@{/marketing/leads}"><i class="bi bi-person-lines-fill"></i> Leads</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/oportunidades}"><i class="bi bi-funnel"></i> Oportunidades</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/clientes}"><i class="bi bi-building"></i> Clientes</a></li>
+        <li class="nav-item"><a class="nav-link" th:href="@{/marketing/reportes}"><i class="bi bi-bar-chart-line"></i> Reportes</a></li>
+    </ul>
+    <form th:action="@{/logout}" method="post" class="mt-3 px-2">
+        <button type="submit" class="btn btn-outline-light w-100 text-start">
+            <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+        </button>
+    </form>
+</nav>
+
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <h2 class="fw-bold m-0">
+            <i class="bi bi-plus-circle text-primary me-2" th:if="${!isEdit}"></i>
+            <i class="bi bi-pencil-square text-warning me-2" th:if="${isEdit}"></i>
+            <span th:text="${isEdit} ? 'Editar Lead' : 'Nuevo Lead'">Nuevo Lead</span>
+        </h2>
+        <a th:href="@{/marketing/leads}" class="btn btn-outline-secondary btn-sm">Cancelar</a>
+    </div>
+
+    <div class="form-card">
+        <form th:action="${isEdit} ? @{/marketing/leads/{id}/actualizar(id=${leadId})} : @{/marketing/leads/guardar}"
+              method="post" th:object="${lead}">
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Empresa *</label>
+                    <input type="text" th:field="*{empresa}" class="form-control" placeholder="Nombre de la empresa" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Contacto Principal *</label>
+                    <input type="text" th:field="*{nombres}" class="form-control" placeholder="Nombre completo" required>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Correo Electrónico</label>
+                    <input type="email" th:field="*{email}" class="form-control" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Teléfono</label>
+                    <input type="tel" th:field="*{telefono}" class="form-control" placeholder="999-999-999">
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Maquinaria de Interés</label>
+                    <!-- Maquinaria de interés opcional -->
+                    <select th:field="*{servicioId}" class="form-select">
+                        <option value="">Seleccione maquinaria (opcional)...</option>
+                        <option th:each="s : ${servicios}"
+                                th:value="${s.id}"
+                                th:text="${s.codigoInterno + ' · ' + s.marca + ' ' + s.modelo}">
+                            Alquiler Volquete 20m3
+                        </option>
+                    </select>
+                    <div class="text-danger small" th:if="${#fields.hasErrors('servicioId')}" th:errors="*{servicioId}"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Origen</label>
+                    <select th:field="*{origen}" class="form-select">
+                        <option value="">Seleccione...</option>
+                        <option value="WEB_CORPORATIVA">Web Corporativa</option>
+                        <option value="WHATSAPP">WhatsApp Business</option>
+                        <option value="REFERIDO">Referido</option>
+                        <option value="FERIA_INTERNACIONAL">Feria Internacional</option>
+                        <option value="LINKEDIN">Campaña LinkedIn</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Estado Inicial</label>
+                <select th:field="*{estado}" class="form-select">
+                    <option value="NUEVO">Nuevo</option>
+                    <option value="CONTACTADO">Contactado</option>
+                    <option value="CALIFICADO">Calificado</option>
+                </select>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary px-4"
+                        th:text="${isEdit} ? 'Actualizar Lead' : 'Guardar Lead'">
+                    Guardar Lead
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
