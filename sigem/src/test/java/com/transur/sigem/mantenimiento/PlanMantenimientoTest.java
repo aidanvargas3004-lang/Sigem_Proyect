@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** RF013: el plan preventivo alerta al 90 % del intervalo y vence al 100 %. */
+/** RF012: el plan preventivo alerta al 90 % del intervalo y vence al 100 %. */
 class PlanMantenimientoTest {
 
     private PlanMantenimiento plan(String criterio, int frecuencia, int ultimo, int lecturaActual) {
