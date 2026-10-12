@@ -144,7 +144,8 @@ public class DemoOperacionesSeeder implements CommandLineRunner {
 
     private void gps(List<Maquinaria> maquinas) {
         if (gpsRepo.count() > 0) return;
-        double[][] base = {{-12.0464, -77.0428}, {-12.1211, -77.0297}, {-11.9886, -77.0607}, {-12.0700, -76.9500}, {-12.2100, -76.9300}};
+        // Arequipa: Parque Industrial, Cerro Verde, Yura, Characato y Cayma.
+        double[][] base = {{-16.4205, -71.5203}, {-16.5300, -71.5900}, {-16.2500, -71.6800}, {-16.4700, -71.4800}, {-16.3600, -71.5500}};
         LocalDateTime inicio = LocalDateTime.now().minusHours(3);
         for (int u = 0; u < Math.min(5, maquinas.size()); u++) {
             Maquinaria m = maquinas.get(u);
@@ -154,8 +155,8 @@ public class DemoOperacionesSeeder implements CommandLineRunner {
                 UbicacionGps g = new UbicacionGps();
                 g.setMaquinaria(m);
                 g.setServicio(servicio);
-                g.setLatitud(base[u][0] + p * 0.0042);
-                g.setLongitud(base[u][1] + p * 0.0031 * (u % 2 == 0 ? 1 : -1));
+                g.setLatitud(Math.round((base[u][0] + p * 0.0042) * 1e6) / 1e6);
+                g.setLongitud(Math.round((base[u][1] + p * 0.0031 * (u % 2 == 0 ? 1 : -1)) * 1e6) / 1e6);
                 g.setVelocidad(p == 5 ? 0.0 : 25.0 + p * 4);
                 g.setReferencia(p == 0 ? "Salida de base" : p == 5 ? "Llegada a obra" : "En ruta");
                 g.setFechaHora(inicio.plusMinutes(p * 30L));

@@ -8,27 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** API de consulta de auditoría: solo ADMIN (ver SecurityConfig). El registro es automático. */
 @RestController
 @RequestMapping("/api/sistema/auditoria")
 @RequiredArgsConstructor
 public class AuditoriaController {
 
     private final AuditoriaService auditoriaService;
-
-    // ✅ NUEVO: Endpoint para registrar auditoría manualmente (POST)
-    @PostMapping
-    public ResponseEntity<Void> registrar(
-            @RequestParam Long usuarioId,
-            @RequestParam String modulo,
-            @RequestParam String accion,
-            @RequestParam String entidad,
-            @RequestParam Long entidadId,
-            @RequestParam(required = false) String datosAnteriores,
-            @RequestParam(required = false) String datosNuevos) {
-
-        auditoriaService.registrar(usuarioId, modulo, accion, entidad, entidadId, datosAnteriores, datosNuevos);
-        return ResponseEntity.ok().build();
-    }
 
     // ✅ EXISTENTE: Listar por módulo
     @GetMapping("/modulo/{modulo}")
