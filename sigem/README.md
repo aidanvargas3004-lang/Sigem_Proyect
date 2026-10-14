@@ -113,7 +113,16 @@ Cada módulo sigue la misma organización: `entity` (modelo JPA), `repository` (
 - [docs/SEGURIDAD.md](docs/SEGURIDAD.md) — controles de seguridad implementados y consideraciones por área.
 - [docs/evidencias/](docs/evidencias/) — capturas de cada pantalla por rol, tomadas con la aplicación en ejecución sobre PostgreSQL.
 
-## 5. Respaldos de la base de datos
+## 5. Importación y exportación de ficheros
+
+| Tipo | Dónde | Formato |
+|---|---|---|
+| Importar repuestos | Logística → Repuestos → *Importar repuestos desde Excel* (plantilla descargable) | .xlsx |
+| Exportar reportes | `/reportes`, `/ventas/reportes`, `/marketing/reportes`, `/seguridad/auditoria` | .xlsx / .pdf |
+| Respaldo de BD | Administración → Respaldos y BD | .sql |
+| Subir imágenes / documentos | Maquinaria, incidencias, documentos de RRHH (Cloudinary) | imagen / PDF |
+
+## 5.1 Respaldos de la base de datos
 
 - **Automático:** cada día a las 02:00 (`BACKUP_CRON`) se genera `backups/sigem_db_AAAAMMDD_HHMMSS.sql`; se conservan los últimos 15 (`BACKUP_RETENER`).
 - **A pedido:** Administración → *Respaldos y BD* → *Generar respaldo ahora*; desde ahí también se descarga cada archivo.
