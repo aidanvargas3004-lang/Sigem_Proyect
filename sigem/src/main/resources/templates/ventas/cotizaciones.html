@@ -112,10 +112,11 @@
                     </td>
                     <td class="text-end pe-4">
                         <span th:if="${cot.estado == 'ENVIADA'}" class="badge text-bg-info me-1">Esperando al cliente</span>
-                        <a th:if="${cot.estado == 'ENVIADA'}"
-                           th:href="@{/ventas/cotizaciones/{id}/rechazar(id=${cot.id})}"
-                           class="btn btn-sm btn-outline-danger rounded-circle" title="Rechazar / cancelar cotización"
-                           onclick="return confirm('¿Marcar esta cotización como rechazada? El cliente verá el cambio.')"><i class="bi bi-x-lg"></i></a>
+                        <form th:if="${cot.estado == 'ENVIADA'}" class="d-inline"
+                              th:action="@{/ventas/cotizaciones/{id}/rechazar(id=${cot.id})}" method="post"
+                              onsubmit="return confirm('¿Marcar esta cotización como rechazada? El cliente verá el cambio.')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Rechazar / cancelar cotización"><i class="bi bi-x-lg"></i></button>
+                        </form>
                         <a th:if="${cot.estado == 'APROBADA'}"
                            th:href="@{/ventas/contratos/nuevo(cotizacionId=${cot.id})}"
                            class="btn btn-sm btn-outline-primary" title="Generar contrato">

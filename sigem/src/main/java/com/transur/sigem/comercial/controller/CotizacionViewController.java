@@ -72,7 +72,7 @@ public class CotizacionViewController {
         }
     }
 
-    @GetMapping("/{id}/rechazar")
+    @PostMapping("/{id}/rechazar")
     public String rechazar(@PathVariable Long id, RedirectAttributes redir) {
         try {
             cotizacionService.cambiarEstado(id, "RECHAZADA");
