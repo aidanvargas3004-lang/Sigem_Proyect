@@ -6,7 +6,6 @@ maquinaria de alquiler. Reemplaza la coordinación por llamadas, mensajería, cu
 cálculo sueltas por un único registro compartido por Operaciones, Mantenimiento, Administración,
 Comercial y Recursos Humanos.
 
-![Panel principal](docs/capturas/02-dashboard.png)
 
 ## Contenido
 
